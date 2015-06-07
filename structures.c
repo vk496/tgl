@@ -29,9 +29,7 @@
 #include "mtproto-common.h"
 //#include "telegram.h"
 #include "tree.h"
-#include <openssl/aes.h>
-#include <openssl/bn.h>
-#include <openssl/sha.h>
+#include "tgl-crypt.c"
 #include "queries.h"
 #include "tgl-binlog.h"
 #include "tgl-methods-in.h"
@@ -45,7 +43,7 @@
 #include "auto/auto-fetch-ds.h"
 #include "auto/auto-free-ds.h"
 
-#define sha1 SHA1
+#define sha1 TGLCM.SHA1
 
 struct random2local {
   long long random_id;
@@ -1191,9 +1189,9 @@ static int decrypt_encrypted_message (struct tgl_secret_chat *E) {
   memcpy (iv + 20, sha1c_buffer + 16, 4);
   memcpy (iv + 24, sha1d_buffer + 0, 8);
 
-  AES_KEY aes_key;
-  AES_set_decrypt_key (key, 256, &aes_key);
-  AES_ige_encrypt ((void *)decr_ptr, (void *)decr_ptr, 4 * (decr_end - decr_ptr), &aes_key, iv, 0);
+  TGLC_AES_KEY aes_key;
+  TGLCM.AES_set_decrypt_key (key, 256, &aes_key);
+  TGLCM.AES_ige_encrypt ((void *)decr_ptr, (void *)decr_ptr, 4 * (decr_end - decr_ptr), &aes_key, iv, 0);
   memset (&aes_key, 0, sizeof (aes_key));
 
   int x = *(decr_ptr);
@@ -2086,7 +2084,7 @@ void tgl_free_all (struct tgl_state *TLS) {
   for (i = 0; i <= TLS->max_dc_num; i++) if (TLS->DC_list[i]) {
     tgls_free_dc (TLS, TLS->DC_list[i]);
   }
-  BN_CTX_free (TLS->BN_ctx);
+  TGLCM.bn_ctx_free (TLS->BN_ctx);
   tgls_free_pubkey (TLS);
 
   if (TLS->ev_login) { TLS->timer_methods->free (TLS->ev_login); }

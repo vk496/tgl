@@ -21,8 +21,8 @@
 #ifndef __TOOLS_H__
 #define __TOOLS_H__
 #include <time.h>
-#include <openssl/err.h>
 #include <assert.h>
+#include "tgl-crypt.h"
 #include "tgl.h"
 
 #define talloc tgl_allocator->alloc
@@ -55,7 +55,7 @@ static inline void out_of_memory (void) {
 static inline void ensure (int r) {
   if (!r) {
     fprintf (stderr, "Open SSL error\n");
-    ERR_print_errors_fp (stderr);
+    TGLCM.ERR_print_errors_fp (stderr);
     assert (0);
   }
 }

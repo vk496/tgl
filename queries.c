@@ -41,12 +41,8 @@
 #include "tgl-structures.h"
 //#include "interface.h"
 //#include "net.h"
-#include <openssl/bn.h>
-#include <openssl/rand.h>
-#include <openssl/aes.h>
-#include <openssl/sha.h>
-#include <openssl/md5.h>
 
+#include "tgl-crypt.h"
 #include "no-preview.h"
 #include "tgl-binlog.h"
 #include "updates.h"
@@ -61,7 +57,7 @@
 #include "mtproto-utils.h"
 #include "tgl-methods-in.h"
 
-#define sha1 SHA1
+#define sha1 TGLCM.SHA1
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -1550,9 +1546,9 @@ static void send_part (struct tgl_state *TLS, struct send_file *f, void *callbac
         x = (x + 15) & ~15;
       }
       
-      AES_KEY aes_key;
-      AES_set_encrypt_key (f->key, 256, &aes_key);
-      AES_ige_encrypt ((void *)buf, (void *)buf, x, &aes_key, f->iv, 1);
+      TGLC_AES_KEY aes_key;
+      TGLCM.AES_set_encrypt_key (f->key, 256, &aes_key);
+      TGLCM.AES_ige_encrypt ((void *)buf, (void *)buf, x, &aes_key, f->iv, 1);
       memset (&aes_key, 0, sizeof (aes_key));
     }
     out_cstring (buf, x);
@@ -2257,9 +2253,9 @@ static int download_on_answer (struct tgl_state *TLS, struct query *q, void *DD)
     assert (!(len & 15));
     void *ptr = DS_UF->bytes->data;
 
-    AES_KEY aes_key;
-    AES_set_decrypt_key (D->key, 256, &aes_key);
-    AES_ige_encrypt (ptr, ptr, len, &aes_key, D->iv, 0);
+    TGLC_AES_KEY aes_key;
+    TGLCM.AES_set_decrypt_key (D->key, 256, &aes_key);
+    TGLCM.AES_ige_encrypt (ptr, ptr, len, &aes_key, D->iv, 0);
     memset (&aes_key, 0, sizeof (aes_key));
     if (len > D->size - D->offset) {
       len = D->size - D->offset;
@@ -2483,7 +2479,7 @@ void tgl_do_load_encr_document (struct tgl_state *TLS, struct tgl_encr_document 
   unsigned char str[64];
   memcpy (str, V->key, 32);
   memcpy (str + 32, V->iv, 32);
-  MD5 (str, 64, md5);
+  TGLCM.MD5 (str, 64, md5);
   assert (V->key_fingerprint == ((*(int *)md5) ^ (*(int *)(md5 + 4))));
 }
 /* }}} */
@@ -3417,7 +3413,7 @@ static void tgl_do_act_set_password (struct tgl_state *TLS, const char *current_
     memcpy (s + current_salt_len, current_password, current_password_len);
     memcpy (s + current_salt_len + current_password_len, current_salt, current_salt_len);
 
-    SHA256 ((void *)s, 2 * current_salt_len + current_password_len, shab);
+    TGLCM.SHA256 ((void *)s, 2 * current_salt_len + current_password_len, shab);
     out_cstring ((void *)shab, 32);
   } else {
     out_string ("");
@@ -3438,7 +3434,7 @@ static void tgl_do_act_set_password (struct tgl_state *TLS, const char *current_
     memcpy (s + l, new_password, new_password_len);
     memcpy (s + l + new_password_len, d, l);
 
-    SHA256 ((void *)s, 2 * l + new_password_len, shab);
+    TGLCM.SHA256 ((void *)s, 2 * l + new_password_len, shab);
     
     out_cstring (d, l);
     out_cstring ((void *)shab, 32);
@@ -3612,7 +3608,7 @@ static void tgl_pwd_got (struct tgl_state *TLS, const char *pwd, void *_T) {
   
     memcpy (s + l + r, E->current_salt, l);
 
-    SHA256 ((void *)s, 2 * l + r, shab);
+    TGLCM.SHA256 ((void *)s, 2 * l + r, shab);
     out_cstring ((void *)shab, 32);
   } else {
     out_string ("");
@@ -3871,29 +3867,29 @@ void tgl_do_request_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E) 
   int rst =  tgl_sce_requested;
   bl_do_encr_chat_exchange_new (TLS, E, &id, NULL, &rst);
   
-  BIGNUM *a = BN_bin2bn (s, 256, 0);
+  TGLC_BIGNUM *a = TGLCM.BN_bin2bn (s, 256, 0);
   ensure_ptr (a);
-  BIGNUM *p = BN_bin2bn (TLS->encr_prime, 256, 0); 
+  TGLC_BIGNUM *p = TGLCM.BN_bin2bn (TLS->encr_prime, 256, 0); 
   ensure_ptr (p);
  
-  BIGNUM *g = BN_new ();
+  TGLC_BIGNUM *g = TGLMC.BN_new ();
   ensure_ptr (g);
 
-  ensure (BN_set_word (g, TLS->encr_root));
+  ensure (TGLCM.BN_set_word (g, TLS->encr_root));
 
-  BIGNUM *r = BN_new ();
+  TGLC_BIGNUM *r = TGLMC.BN_new ();
   ensure_ptr (r);
 
-  ensure (BN_mod_exp (r, g, a, p, TLS->BN_ctx));
+  ensure (TGLCM.BN_mod_exp (r, g, a, p, TLS->BN_ctx));
   
   static unsigned char kk[256];
   memset (kk, 0, sizeof (kk));
-  BN_bn2bin (r, kk + (256 - BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, kk + (256 - TGLCM.BN_num_bytes (r)));
 
-  BN_clear_free (a);
-  BN_clear_free (g);
-  BN_clear_free (p);
-  BN_clear_free (r);
+  TGLCM.BN_clear_free (a);
+  TGLCM.BN_clear_free (g);
+  TGLCM.BN_clear_free (p);
+  TGLCM.BN_clear_free (r);
   
   static int action[70];  
   action[0] = CODE_decrypted_message_action_request_key;
@@ -3916,34 +3912,34 @@ void tgl_do_accept_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E, l
   /*static unsigned char s[256];
   tglt_secure_random (s, 256);
 
-  BIGNUM *b = BN_bin2bn (s, 256, 0);
+  TGLC_BIGNUM *b = TGLCM.BN_bin2bn (s, 256, 0);
   ensure_ptr (b);
-  BIGNUM *g_a = BN_bin2bn (ga, 256, 0);
+  TGLC_BIGNUM *g_a = TGLCM.BN_bin2bn (ga, 256, 0);
   ensure_ptr (g_a);
 
   assert (tglmp_check_g_a (TLS, TLS->encr_prime_bn, g_a) >= 0);
   //if (!ctx) {
-  //  ctx = BN_CTX_new ();
+  //  ctx = TGLCM.BN_CTX_new ();
   //  ensure_ptr (ctx);
   //}
-  BIGNUM *p = TLS->encr_prime_bn; 
+  TGLC_BIGNUM *p = TLS->encr_prime_bn; 
   ensure_ptr (p);
-  BIGNUM *r = BN_new ();
+  TGLC_BIGNUM *r = TGLMC.BN_new ();
   ensure_ptr (r);
-  ensure (BN_mod_exp (r, g_a, b, p, TLS->BN_ctx));
+  ensure (TGLCM.BN_mod_exp (r, g_a, b, p, TLS->BN_ctx));
 
   static unsigned char kk[256];
   memset (kk, 0, sizeof (kk));
-  BN_bn2bin (r, kk + (256 - BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, kk + (256 - TGLCM.BN_num_bytes (r)));
 
   bl_do_encr_chat_exchange_accept (TLS, E, exchange_id, kk);
   
-  ensure (BN_set_word (g_a, TLS->encr_root));
-  ensure (BN_mod_exp (r, g_a, b, p, TLS->BN_ctx));
+  ensure (TGLCM.BN_set_word (g_a, TLS->encr_root));
+  ensure (TGLCM.BN_mod_exp (r, g_a, b, p, TLS->BN_ctx));
   
   static unsigned char buf[256];
   memset (buf, 0, sizeof (buf));
-  BN_bn2bin (r, buf + (256 - BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, buf + (256 - TGLCM.BN_num_bytes (r)));
   
   static int action[70];  
   action[0] = CODE_decrypted_message_action_accept_key;
@@ -3957,9 +3953,9 @@ void tgl_do_accept_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E, l
 
   bl_do_send_message_action_encr (TLS, t, TLS->our_id, tgl_get_peer_type (E->id), tgl_get_peer_id (E->id), time (0), 70, action);
 
-  BN_clear_free (b);
-  BN_clear_free (g_a);
-  BN_clear_free (r);
+  TGLCM.BN_clear_free (b);
+  TGLCM.BN_clear_free (g_a);
+  TGLCM.BN_clear_free (r);
   
   struct tgl_message *M = tgl_message_get (TLS, t);
   assert (M);
@@ -3987,29 +3983,29 @@ void tgl_do_confirm_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E, 
 void tgl_do_commit_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E, unsigned char gb[]) {
   /*assert (TLS->encr_prime);
   
-  BIGNUM *g_b = BN_bin2bn (gb, 256, 0);  
+  TGLC_BIGNUM *g_b = TGLCM.BN_bin2bn (gb, 256, 0);  
   ensure_ptr (g_b);
   assert (tglmp_check_g_a (TLS, TLS->encr_prime_bn, g_b) >= 0);
 
-  BIGNUM *p = TLS->encr_prime_bn;
+  TGLC_BIGNUM *p = TLS->encr_prime_bn;
   ensure_ptr (p);
-  BIGNUM *r = BN_new ();
+  TGLC_BIGNUM *r = TGLMC.BN_new ();
   ensure_ptr (r);
-  BIGNUM *a = BN_bin2bn ((void *)E->exchange_key, 256, 0);
+  TGLC_BIGNUM *a = TGLCM.BN_bin2bn ((void *)E->exchange_key, 256, 0);
   ensure_ptr (a);
-  ensure (BN_mod_exp (r, g_b, a, p, TLS->BN_ctx));
+  ensure (TGLCM.BN_mod_exp (r, g_b, a, p, TLS->BN_ctx));
 
   static unsigned char s[256];
   memset (s, 0, 256);
   
-  BN_bn2bin (r, s + (256 - BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, s + (256 - TGLCM.BN_num_bytes (r)));
   
-  BN_clear_free (g_b);
-  BN_clear_free (r);
-  BN_clear_free (a);
+  TGLCM.BN_clear_free (g_b);
+  TGLCM.BN_clear_free (r);
+  TGLCM.BN_clear_free (a);
  
   static unsigned char sh[20];
-  SHA1 (s, 256, sh);
+  TGLCM.SHA1 (s, 256, sh);
   
   int action[4];
   action[0] = CODE_decrypted_message_action_commit_key;

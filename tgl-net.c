@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <poll.h>
-#include <openssl/rand.h>
 #include <arpa/inet.h>
 #ifdef EVENT_V2
 #include <event2/event.h>

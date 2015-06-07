@@ -21,15 +21,15 @@
 #ifndef __MTPROTO_CLIENT_H__
 #define __MTPROTO_CLIENT_H__
 //#include "net.h"
-#include <openssl/bn.h>
+#include "tgl-crypt.h"
 //void on_start (void);
 //..long long encrypt_send_message (struct connection *c, int *msg, int msg_ints, int useful);
 //void dc_authorize (struct tgl_dc *DC);
 //void work_update (struct connection *c, long long msg_id);
 //void work_update_binlog (void);
-//int check_g (unsigned char p[256], BIGNUM *g);
-//int check_g_bn (BIGNUM *p, BIGNUM *g);
-//int check_DH_params (BIGNUM *p, int g);
+//int check_g (unsigned char p[256], TGLC_BIGNUM *g);
+//int check_g_bn (TGLC_BIGNUM *p, TGLC_BIGNUM *g);
+//int check_DH_params (TGLC_BIGNUM *p, int g);
 //void secure_random (void *s, int l);
 
 #include "tgl.h"
@@ -47,8 +47,8 @@ struct connection;
 
 long long tglmp_encrypt_send_message (struct tgl_state *TLS, struct connection *c, int *msg, int msg_ints, int flags);
 void tglmp_dc_create_session (struct tgl_state *TLS, struct tgl_dc *DC);
-//int tglmp_check_g (struct tgl_state *TLS, unsigned char p[256], BIGNUM *g);
-//int tglmp_check_DH_params (struct tgl_state *TLS, BIGNUM *p, int g);
+//int tglmp_check_g (struct tgl_state *TLS, unsigned char p[256], TGLC_BIGNUM *g);
+//int tglmp_check_DH_params (struct tgl_state *TLS, TGLC_BIGNUM *p, int g);
 struct tgl_dc *tglmp_alloc_dc (struct tgl_state *TLS, int id, char *ip, int port);
 void tglmp_regenerate_temp_auth_key (struct tgl_state *TLS, struct tgl_dc *D);
 

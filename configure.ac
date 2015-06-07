@@ -21,11 +21,6 @@ AC_SEARCH_LIBS([clock_gettime], [rt])
 EVENT_VER=""
 EXTRA_OBJECTS=""
 
-#     OPENSSL_INCLUDES to the include directives required
-#     OPENSSL_LIBS to the -l directives required
-#     OPENSSL_LDFLAGS to the -L or -R flags required
-
-AX_CHECK_OPENSSL(,[AC_MSG_ERROR([No openssl found])])
 AX_CHECK_ZLIB(, [AC_MSG_ERROR([No zlib found])])
 
 AC_ARG_ENABLE(extf,[enables extended queries system],
@@ -37,7 +32,7 @@ AC_ARG_ENABLE(extf,[enables extended queries system],
   ])
 
 AC_ARG_ENABLE(libevent,[--enable-libevent include libevent-based net and timers],
-  [ 
+  [
   if test "x$enableval" = "xyes" ; then
     AC_CHECK_LIB([event], [event_base_new], [], [AC_MSG_ERROR([no libevent found])])
     AC_CHECK_HEADER(event2/event.h, [AC_DEFINE([EVENT_V2], [1], [Use libevent v2])], [
@@ -49,14 +44,28 @@ AC_ARG_ENABLE(libevent,[--enable-libevent include libevent-based net and timers]
   ])
 
 AC_ARG_ENABLE(valgrind,[fixes for correct valgrind work],
-  [ 
+  [
   if test "x$enableval" = "xyes" ; then
     AC_CHECK_HEADER(valgrind/memcheck.h, [AC_DEFINE([VALGRIND_FIXES], [1], [fixed for correct valgrind work])], [
     ])
   fi
   ],[
   ])
-    
+
+AC_ARG_ENABLE(libopenssl, [--disable-libopenssl do not link to openssl, crypto functions must be provided manually])
+AS_IF([test "x$enable_libopenssl" != "xno"], [
+#    OPENSSL_INCLUDES to the include directives required
+#    OPENSSL_LIBS to the -l directives required
+#    OPENSSL_LDFLAGS to the -L or -R flags required
+  AX_CHECK_OPENSSL(
+    [
+      AC_DEFINE([HAVE_LIBOPENSSL], [1], [Define to 1 to include openssl])
+      EXTRA_OBJECTS="${EXTRA_OBJECTS} objs/tgl-crypt.o"
+    ],
+    [AC_MSG_ERROR([No openssl found])]
+  )
+])
+
 # Checks for header files.
 AC_CHECK_HEADERS([execinfo.h fcntl.h malloc.h netdb.h stdlib.h string.h unistd.h arpa/inet.h mach/mach.h netinet/in.h sys/file.h sys/socket.h termios.h])
 

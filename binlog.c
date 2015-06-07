@@ -32,8 +32,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <openssl/bn.h>
 
+#include "tgl-crypt.h"
 #include "tgl-binlog.h"
 #include "mtproto-common.h"
 //#include "net.h"
@@ -50,8 +50,6 @@
 
 #include "tgl-structures.h"
 #include "tgl-methods-in.h"
-
-#include <openssl/sha.h>
 
 #define BINLOG_BUFFER_SIZE (1 << 20)
 static int binlog_buffer[BINLOG_BUFFER_SIZE];
@@ -107,7 +105,7 @@ static int fetch_comb_binlog_auth_key (struct tgl_state *TLS, struct tl_ds_binlo
   tglf_fetch_int_tuple ((void *)TLS->DC_list[num]->auth_key, DS_U->key->key, 64);
   
   static unsigned char sha1_buffer[20];
-  SHA1 ((void *)TLS->DC_list[num]->auth_key, 256, sha1_buffer);
+  TGLCM.SHA1 ((void *)TLS->DC_list[num]->auth_key, 256, sha1_buffer);
   TLS->DC_list[num]->auth_key_id = *(long long *)(sha1_buffer + 12);
 
   TLS->DC_list[num]->flags |= TGLDCF_AUTHORIZED;
@@ -148,14 +146,14 @@ static int fetch_comb_binlog_our_id (struct tgl_state *TLS, struct tl_ds_binlog_
      
 /* {{{ Set DH params */
 static int fetch_comb_binlog_set_dh_params (struct tgl_state *TLS, struct tl_ds_binlog_update *DS_U) {
-  if (TLS->encr_prime) { tfree (TLS->encr_prime, 256); BN_free (TLS->encr_prime_bn); }
+  if (TLS->encr_prime) { tfree (TLS->encr_prime, 256); TGLCM.BN_free (TLS->encr_prime_bn); }
 
   TLS->encr_root = DS_LVAL (DS_U->root);
   TLS->encr_prime = talloc (256);
   tglf_fetch_int_tuple ((void *)TLS->encr_prime, DS_U->prime->key, 64);
 
-  TLS->encr_prime_bn = BN_new ();
-  BN_bin2bn ((void *)TLS->encr_prime, 256, TLS->encr_prime_bn);
+  TLS->encr_prime_bn = TGLMC.BN_new ();
+  TGLCM.BN_bin2bn ((void *)TLS->encr_prime, 256, TLS->encr_prime_bn);
   TLS->encr_param_version = DS_LVAL (DS_U->version);
     
   assert (tglmp_check_DH_params (TLS, TLS->encr_prime_bn, TLS->encr_root) >= 0);
@@ -854,7 +852,7 @@ static int fetch_comb_binlog_encr_chat_exchange_new (struct tgl_state *TLS, stru
   case tgl_sce_accepted:
     tglf_fetch_int_tuple (P->encr_chat.exchange_key, DS_U->key->key, 64);
   
-    SHA1 ((unsigned char *)P->encr_chat.exchange_key, 256, sha_buffer);
+    TGLCM.SHA1 ((unsigned char *)P->encr_chat.exchange_key, 256, sha_buffer);
     P->encr_chat.exchange_key_fingerprint = *(long long *)(sha_buffer + 12);
     break;
   case tgl_sce_committed:
@@ -863,7 +861,7 @@ static int fetch_comb_binlog_encr_chat_exchange_new (struct tgl_state *TLS, stru
 
     tglf_fetch_int_tuple (P->encr_chat.key, DS_U->key->key, 64);
   
-    SHA1 ((unsigned char *)P->encr_chat.key, 256, sha_buffer);
+    TGLCM.SHA1 ((unsigned char *)P->encr_chat.key, 256, sha_buffer);
     P->encr_chat.key_fingerprint = *(long long *)(sha_buffer + 12);
     break;
   case tgl_sce_confirmed:
