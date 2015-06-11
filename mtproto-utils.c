@@ -22,9 +22,9 @@ int tglmp_check_DH_params (struct tgl_state *TLS, TGLC_BIGNUM *p, int g) {
   if (g < 2 || g > 7) { return -1; }
   if (TGLCM.BN_num_bits (p) != 2048) { return -1; }
   
-  TGLC_BIGNUM *t = TGLMC.BN_new ();
+  TGLC_BIGNUM *t = TGLCM.BN_new ();
   
-  TGLC_BIGNUM *dh_g = TGLMC.BN_new ();
+  TGLC_BIGNUM *dh_g = TGLCM.BN_new ();
   
   ensure (TGLCM.BN_set_word (dh_g, 4 * g));
   ensure (BN_mod (t, p, dh_g, TLS->BN_ctx));
@@ -59,7 +59,7 @@ int tglmp_check_DH_params (struct tgl_state *TLS, TGLC_BIGNUM *p, int g) {
     return -1; 
   }
 
-  TGLC_BIGNUM *b = TGLMC.BN_new ();
+  TGLC_BIGNUM *b = TGLCM.BN_new ();
   ensure (TGLCM.BN_set_word (b, 2));
   ensure (TGLCM.BN_div (t, 0, p, b, TLS->BN_ctx));
   if (!check_prime (TLS, t)) { 
@@ -72,7 +72,7 @@ int tglmp_check_DH_params (struct tgl_state *TLS, TGLC_BIGNUM *p, int g) {
 
 // checks that g_a is acceptable for DH
 int tglmp_check_g_a (struct tgl_state *TLS, TGLC_BIGNUM *p, TGLC_BIGNUM *g_a) {
-  if (TGLCM.BN_num_bytes (g_a) > 256) {
+  if (TGLCM.TGLCM_BN_num_bytes (g_a) > 256) {
     return -1;
   }
   if (TGLCM.BN_num_bits (g_a) < 2048 - 64) {
@@ -82,7 +82,7 @@ int tglmp_check_g_a (struct tgl_state *TLS, TGLC_BIGNUM *p, TGLC_BIGNUM *g_a) {
     return -1;
   }
   
-  TGLC_BIGNUM *dif = TGLMC.BN_new ();
+  TGLC_BIGNUM *dif = TGLCM.BN_new ();
   TGLCM.BN_sub (dif, p, g_a);
   if (TGLCM.BN_num_bits (dif) < 2048 - 64) {
     TGLCM.BN_free (dif);

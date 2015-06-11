@@ -547,12 +547,12 @@ void tgl_do_send_accept_encr_chat (struct tgl_state *TLS, struct tgl_secret_chat
   //  ensure_ptr (ctx);
   //}
   TGLC_BIGNUM *p = TLS->encr_prime_bn;
-  TGLC_BIGNUM *r = TGLMC.BN_new ();
+  TGLC_BIGNUM *r = TGLCM.BN_new ();
   ensure_ptr (r);
   ensure (TGLCM.BN_mod_exp (r, g_a, b, p, TLS->BN_ctx));
   static unsigned char kk[256];
   memset (kk, 0, sizeof (kk));
-  TGLCM.BN_bn2bin (r, kk + (256 - TGLCM.BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, kk + (256 - TGLCM.TGLCM_BN_num_bytes (r)));
   static unsigned char sha_buffer[20];
   sha1 (kk, 256, sha_buffer);
 
@@ -581,7 +581,7 @@ void tgl_do_send_accept_encr_chat (struct tgl_state *TLS, struct tgl_secret_chat
   ensure (TGLCM.BN_mod_exp (r, g_a, b, p, TLS->BN_ctx));
   static unsigned char buf[256];
   memset (buf, 0, sizeof (buf));
-  TGLCM.BN_bn2bin (r, buf + (256 - TGLCM.BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, buf + (256 - TGLCM.TGLCM_BN_num_bytes (r)));
   out_cstring ((void *)buf, 256);
 
   out_long (E->key_fingerprint);
@@ -600,7 +600,7 @@ void tgl_do_create_keys_end (struct tgl_state *TLS, struct tgl_secret_chat *U) {
   
   TGLC_BIGNUM *p = TLS->encr_prime_bn;
   ensure_ptr (p);
-  TGLC_BIGNUM *r = TGLMC.BN_new ();
+  TGLC_BIGNUM *r = TGLCM.BN_new ();
   ensure_ptr (r);
   TGLC_BIGNUM *a = TGLCM.BN_bin2bn ((void *)U->key, 256, 0);
   ensure_ptr (a);
@@ -610,7 +610,7 @@ void tgl_do_create_keys_end (struct tgl_state *TLS, struct tgl_secret_chat *U) {
   memcpy (t, U->key, 256);
   
   memset (U->key, 0, sizeof (U->key));
-  TGLCM.BN_bn2bin (r, (void *)(((char *)(U->key)) + (256 - TGLCM.BN_num_bytes (r))));
+  TGLCM.BN_bn2bin (r, (void *)(((char *)(U->key)) + (256 - TGLCM.TGLCM_BN_num_bytes (r))));
   
   static unsigned char sha_buffer[20];
   sha1 ((void *)U->key, 256, sha_buffer);
@@ -641,12 +641,12 @@ void tgl_do_send_create_encr_chat (struct tgl_state *TLS, void *x, unsigned char
   TGLC_BIGNUM *p = TGLCM.BN_bin2bn (TLS->encr_prime, 256, 0);
   ensure_ptr (p);
  
-  TGLC_BIGNUM *g = TGLMC.BN_new ();
+  TGLC_BIGNUM *g = TGLCM.BN_new ();
   ensure_ptr (g);
 
   ensure (TGLCM.BN_set_word (g, TLS->encr_root));
 
-  TGLC_BIGNUM *r = TGLMC.BN_new ();
+  TGLC_BIGNUM *r = TGLCM.BN_new ();
   ensure_ptr (r);
 
   ensure (TGLCM.BN_mod_exp (r, g, a, p, TLS->BN_ctx));
@@ -656,7 +656,7 @@ void tgl_do_send_create_encr_chat (struct tgl_state *TLS, void *x, unsigned char
   static char g_a[256];
   memset (g_a, 0, 256);
 
-  TGLCM.BN_bn2bin (r, (void *)(g_a + (256 - TGLCM.BN_num_bytes (r))));
+  TGLCM.BN_bn2bin (r, (void *)(g_a + (256 - TGLCM.TGLCM_BN_num_bytes (r))));
   
   int t = lrand48 ();
   while (tgl_peer_get (TLS, TGL_MK_ENCR_CHAT (t))) {

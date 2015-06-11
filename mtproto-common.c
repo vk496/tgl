@@ -142,7 +142,7 @@ void tgl_prng_seed (struct tgl_state *TLS, const char *password_filename, int pa
 }
 
 int tgl_serialize_bignum (TGLC_BIGNUM  *b, char *buffer, int maxlen) {
-  int itslen = TGLCM.BN_num_bytes (b);
+  int itslen = TGLCM.TGLCM_BN_num_bytes (b);
   int reqlen;
   if (itslen < 254) {
     reqlen = itslen + 1;
@@ -261,7 +261,7 @@ int tgl_pad_rsa_encrypt (struct tgl_state *TLS, char *from, int from_len, char *
   for (i = 0; i < chunks; i++) {
     TGLCM.BN_bin2bn ((unsigned char *) from, 255, &x);
     assert (TGLCM.BN_mod_exp (&y, &x, E, N, TLS->BN_ctx) == 1);
-    unsigned l = 256 - TGLCM.BN_num_bytes (&y);
+    unsigned l = 256 - TGLCM.TGLCM_BN_num_bytes (&y);
     assert (l <= 256);
     memset (to, 0, l);
     TGLCM.BN_bn2bin (&y, (unsigned char *) to + l);
@@ -288,7 +288,7 @@ int tgl_pad_rsa_decrypt (struct tgl_state *TLS, char *from, int from_len, char *
     ++rsa_decrypted_chunks;
     TGLCM.BN_bin2bn ((unsigned char *) from, 256, &x);
     assert (TGLCM.BN_mod_exp (&y, &x, D, N, TLS->BN_ctx) == 1);
-    int l = TGLCM.BN_num_bytes (&y);
+    int l = TGLCM.TGLCM_BN_num_bytes (&y);
     if (l > 255) {
       TGLCM.BN_free (&x);
       TGLCM.BN_free (&y);

@@ -3869,10 +3869,10 @@ void tgl_do_request_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E) 
   
   TGLC_BIGNUM *a = TGLCM.BN_bin2bn (s, 256, 0);
   ensure_ptr (a);
-  TGLC_BIGNUM *p = TGLCM.BN_bin2bn (TLS->encr_prime, 256, 0); 
+  TGLC_BIGNUM *p = TGLCM.BN_bin2bn (TLS->encr_prime, 256, 0);
   ensure_ptr (p);
  
-  TGLC_BIGNUM *g = TGLMC.BN_new ();
+  TGLC_BIGNUM *g = TGLCM.BN_new ();
   ensure_ptr (g);
 
   ensure (TGLCM.BN_set_word (g, TLS->encr_root));
@@ -3884,7 +3884,7 @@ void tgl_do_request_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E) 
   
   static unsigned char kk[256];
   memset (kk, 0, sizeof (kk));
-  TGLCM.BN_bn2bin (r, kk + (256 - TGLCM.BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, kk + (256 - TGLCM.TGLCM_BN_num_bytes (r)));
 
   TGLCM.BN_clear_free (a);
   TGLCM.BN_clear_free (g);
@@ -3924,13 +3924,13 @@ void tgl_do_accept_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E, l
   //}
   TGLC_BIGNUM *p = TLS->encr_prime_bn; 
   ensure_ptr (p);
-  TGLC_BIGNUM *r = TGLMC.BN_new ();
+  TGLC_BIGNUM *r = TGLCM.BN_new ();
   ensure_ptr (r);
   ensure (TGLCM.BN_mod_exp (r, g_a, b, p, TLS->BN_ctx));
 
   static unsigned char kk[256];
   memset (kk, 0, sizeof (kk));
-  TGLCM.BN_bn2bin (r, kk + (256 - TGLCM.BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, kk + (256 - TGLCM.TGLCM_BN_num_bytes (r)));
 
   bl_do_encr_chat_exchange_accept (TLS, E, exchange_id, kk);
   
@@ -3939,7 +3939,7 @@ void tgl_do_accept_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E, l
   
   static unsigned char buf[256];
   memset (buf, 0, sizeof (buf));
-  TGLCM.BN_bn2bin (r, buf + (256 - TGLCM.BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, buf + (256 - TGLCM.TGLCM_BN_num_bytes (r)));
   
   static int action[70];  
   action[0] = CODE_decrypted_message_action_accept_key;
@@ -3989,7 +3989,7 @@ void tgl_do_commit_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E, u
 
   TGLC_BIGNUM *p = TLS->encr_prime_bn;
   ensure_ptr (p);
-  TGLC_BIGNUM *r = TGLMC.BN_new ();
+  TGLC_BIGNUM *r = TGLCM.BN_new ();
   ensure_ptr (r);
   TGLC_BIGNUM *a = TGLCM.BN_bin2bn ((void *)E->exchange_key, 256, 0);
   ensure_ptr (a);
@@ -3998,7 +3998,7 @@ void tgl_do_commit_exchange (struct tgl_state *TLS, struct tgl_secret_chat *E, u
   static unsigned char s[256];
   memset (s, 0, 256);
   
-  TGLCM.BN_bn2bin (r, s + (256 - TGLCM.BN_num_bytes (r)));
+  TGLCM.BN_bn2bin (r, s + (256 - TGLCM.TGLCM_BN_num_bytes (r)));
   
   TGLCM.BN_clear_free (g_b);
   TGLCM.BN_clear_free (r);

@@ -68,7 +68,7 @@
 #define __builtin_bswap32(x) __swap32gen(x)
 #endif
 
-#define sha1 TGLCM_SHA1
+#define sha1 TGLCM.SHA1
 
 #include "mtproto-common.h"
 
@@ -266,8 +266,8 @@ static int send_req_pq_temp_packet (struct tgl_state *TLS, struct connection *c)
 static void send_req_dh_packet (struct tgl_state *TLS, struct connection *c, TGLC_BIGNUM *pq, int temp_key) {
   struct tgl_dc *DC = TLS->net_methods->get_dc (c);
 
-  TGLC_BIGNUM *p = TGLMC.BN_new ();
-  TGLC_BIGNUM *q = TGLMC.BN_new ();
+  TGLC_BIGNUM *p = TGLCM.BN_new ();
+  TGLC_BIGNUM *q = TGLCM.BN_new ();
   assert (bn_factorize (pq, p, q) >= 0);
   
   clear_packet ();
@@ -319,7 +319,7 @@ static void send_dh_params (struct tgl_state *TLS, struct connection *c, TGLC_BI
   out_ints ((int *) DC->server_nonce, 4);
   out_long (0);
   
-  TGLC_BIGNUM *dh_g = TGLMC.BN_new ();
+  TGLC_BIGNUM *dh_g = TGLCM.BN_new ();
   ensure (TGLCM.BN_set_word (dh_g, g));
 
   static unsigned char s_power[256];
@@ -327,15 +327,15 @@ static void send_dh_params (struct tgl_state *TLS, struct connection *c, TGLC_BI
   TGLC_BIGNUM *dh_power = TGLCM.BN_bin2bn ((unsigned char *)s_power, 256, 0);
   ensure_ptr (dh_power);
 
-  TGLC_BIGNUM *y = TGLMC.BN_new ();
+  TGLC_BIGNUM *y = TGLCM.BN_new ();
   ensure_ptr (y);
   ensure (TGLCM.BN_mod_exp (y, dh_g, dh_power, dh_prime, TLS->BN_ctx));
   out_bignum (y);
   TGLCM.BN_free (y);
 
-  TGLC_BIGNUM *auth_key_num = TGLMC.BN_new ();
+  TGLC_BIGNUM *auth_key_num = TGLCM.BN_new ();
   ensure (TGLCM.BN_mod_exp (auth_key_num, g_a, dh_power, dh_prime, TLS->BN_ctx));
-  int l = TGLCM.BN_num_bytes (auth_key_num);
+  int l = TGLCM.TGLCM_BN_num_bytes (auth_key_num);
   assert (l >= 250 && l <= 256);
   assert (TGLCM.BN_bn2bin (auth_key_num, (unsigned char *)(temp_key ? DC->temp_auth_key : DC->auth_key)));
   if (l < 256) {
@@ -392,7 +392,7 @@ static int process_respq_answer (struct tgl_state *TLS, struct connection *c, ch
   }
   fetch_ints (DC->server_nonce, 4);
 
-  TGLC_BIGNUM *pq = TGLMC.BN_new ();
+  TGLC_BIGNUM *pq = TGLCM.BN_new ();
   assert (fetch_bignum (pq) >= 0);
 
   assert (fetch_int ()  == CODE_vector);
@@ -503,8 +503,8 @@ static int process_dh_answer (struct tgl_state *TLS, struct connection *c, char 
   assert (!memcmp (tmp, DC->server_nonce, 16));
   int g = fetch_int ();
   
-  TGLC_BIGNUM *dh_prime = TGLMC.BN_new ();
-  TGLC_BIGNUM *g_a = TGLMC.BN_new ();
+  TGLC_BIGNUM *dh_prime = TGLCM.BN_new ();
+  TGLC_BIGNUM *g_a = TGLCM.BN_new ();
   assert (fetch_bignum (dh_prime) > 0);
   assert (fetch_bignum (g_a) > 0);
   

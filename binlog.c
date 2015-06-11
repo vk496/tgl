@@ -152,7 +152,7 @@ static int fetch_comb_binlog_set_dh_params (struct tgl_state *TLS, struct tl_ds_
   TLS->encr_prime = talloc (256);
   tglf_fetch_int_tuple ((void *)TLS->encr_prime, DS_U->prime->key, 64);
 
-  TLS->encr_prime_bn = TGLMC.BN_new ();
+  TLS->encr_prime_bn = TGLCM.BN_new ();
   TGLCM.BN_bin2bn ((void *)TLS->encr_prime, 256, TLS->encr_prime_bn);
   TLS->encr_param_version = DS_LVAL (DS_U->version);
     

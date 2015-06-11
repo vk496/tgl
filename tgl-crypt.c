@@ -19,9 +19,15 @@
  */
 
 #include "tgl-crypt.h"
+#include <assert.h>
+
+#ifdef VALGRIND_FIXES
+#include "valgrind/memcheck.h"
+#endif
 
 // BN_num_bytes is a macro and cannot be pointed to
-int *TGLC_BN_num_bytes (const TGLC_BIGNUM *a) {
+
+int TGLC_BN_num_bytes (const TGLC_BIGNUM *a) {
   return BN_num_bytes (a);
 }
 
@@ -56,3 +62,18 @@ struct tgl_crypt_methods TGLCM = {
   RAND_pseudo_bytes,
   ERR_print_errors_fp
 };
+
+void tglt_secure_random (void *s, int l) {
+  if (TGLCM.RAND_bytes (s, l) <= 0) {
+    /*if (allow_weak_random) {
+     TGLCM.RAND_pseudo_bytes (s, l);
+     } else {*/
+    assert (0 && "End of random. If you want, you can start with -w");
+    //}
+  } else {
+#ifdef VALGRIND_FIXES
+    VALGRIND_MAKE_MEM_DEFINED (s, l);
+    VALGRIND_CHECK_MEM_IS_DEFINED (s, l);
+#endif
+  }
+}
