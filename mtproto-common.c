@@ -254,21 +254,20 @@ int tgl_pad_rsa_encrypt (struct tgl_state *TLS, char *from, int from_len, char *
   assert (size >= chunks * 256);
   assert (TGLCM.RAND_pseudo_bytes ((unsigned char *) from + from_len, pad) >= 0);
   int i;
-  TGLC_BIGNUM x, y;
-  TGLCM.BN_init (&x);
-  TGLCM.BN_init (&y);
+  TGLC_BIGNUM *x = TGLCM.BN_new ();
+  TGLC_BIGNUM *y = TGLCM.BN_new ();
   rsa_encrypted_chunks += chunks;
   for (i = 0; i < chunks; i++) {
-    TGLCM.BN_bin2bn ((unsigned char *) from, 255, &x);
-    assert (TGLCM.BN_mod_exp (&y, &x, E, N, TLS->BN_ctx) == 1);
-    unsigned l = 256 - TGLCM.TGLCM_BN_num_bytes (&y);
+    TGLCM.BN_bin2bn ((unsigned char *) from, 255, x);
+    assert (TGLCM.BN_mod_exp (y, x, E, N, TLS->BN_ctx) == 1);
+    unsigned l = 256 - TGLCM.TGLCM_BN_num_bytes (y);
     assert (l <= 256);
     memset (to, 0, l);
-    TGLCM.BN_bn2bin (&y, (unsigned char *) to + l);
+    TGLCM.BN_bn2bin (y, (unsigned char *) to + l);
     to += 256;
   }
-  TGLCM.BN_free (&x);
-  TGLCM.BN_free (&y);
+  TGLCM.BN_free (x);
+  TGLCM.BN_free (y);
   return chunks * 256;
 }
 
@@ -281,26 +280,25 @@ int tgl_pad_rsa_decrypt (struct tgl_state *TLS, char *from, int from_len, char *
   assert (bits >= 2041 && bits <= 2048);
   assert (size >= chunks * 255);
   int i;
-  TGLC_BIGNUM x, y;
-  TGLCM.BN_init (&x);
-  TGLCM.BN_init (&y);
+  TGLC_BIGNUM *x = TGLCM.BN_new ();
+  TGLC_BIGNUM *y = TGLCM.BN_new ();
   for (i = 0; i < chunks; i++) {
     ++rsa_decrypted_chunks;
-    TGLCM.BN_bin2bn ((unsigned char *) from, 256, &x);
-    assert (TGLCM.BN_mod_exp (&y, &x, D, N, TLS->BN_ctx) == 1);
-    int l = TGLCM.TGLCM_BN_num_bytes (&y);
+    TGLCM.BN_bin2bn ((unsigned char *) from, 256, x);
+    assert (TGLCM.BN_mod_exp (y, x, D, N, TLS->BN_ctx) == 1);
+    int l = TGLCM.TGLCM_BN_num_bytes (y);
     if (l > 255) {
-      TGLCM.BN_free (&x);
-      TGLCM.BN_free (&y);
+      TGLCM.BN_free (x);
+      TGLCM.BN_free (y);
       return -1;
     }
     assert (l >= 0 && l <= 255);
     memset (to, 0, 255 - l);
-    TGLCM.BN_bn2bin (&y, (unsigned char *) to + 255 - l);
+    TGLCM.BN_bn2bin (y, (unsigned char *) to + 255 - l);
     to += 255;
   }
-  TGLCM.BN_free (&x);
-  TGLCM.BN_free (&y);
+  TGLCM.BN_free (x);
+  TGLCM.BN_free (y);
   return chunks * 255;
 }
 

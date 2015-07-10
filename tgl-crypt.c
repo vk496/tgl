@@ -26,16 +26,15 @@
 #endif
 
 // BN_num_bytes is a macro and cannot be pointed to
-
 int TGLC_BN_num_bytes (const TGLC_BIGNUM *a) {
   return BN_num_bytes (a);
 }
 
+// implement cryptographic and BN functions using OpenSSL
 struct tgl_crypt_methods TGLCM = {
   BN_CTX_new,
   BN_CTX_free,
   BN_new,
-  BN_init,
   BN_free,
   BN_clear_free,
   BN_cmp,

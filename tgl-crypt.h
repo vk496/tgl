@@ -15,7 +15,7 @@
  License along with this library; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
- Copyright Matthias Jentsch 2015
+ Copyright Matthias Jentsch 201544
  */
 
 #ifndef __TGL__TGL_CRYPT__
@@ -36,11 +36,14 @@
 #  define TGLC_BIGNUM  BIGNUM
 #  define TGLC_RSA     RSA
 #  define TGLC_AES_KEY AES_KEY
+
 #else
-#  define TGLC_BN_CTX  void
-#  define TGLC_BIGNUM  void
+#  include <gcrypt.h>
+
+#  define TGLC_BN_CTX  int
+#  define TGLC_BIGNUM  struct gcry_mpi
 #  define TGLC_RSA     void
-#  define TGLC_AES_KEY void
+#  define TGLC_AES_KEY gcry_cipher_hd_t
 #endif
 
 /*
@@ -57,7 +60,6 @@ struct tgl_crypt_methods {
   TGLC_BN_CTX* (*BN_CTX_new) ();
   void (*BN_CTX_free) (TGLC_BN_CTX* ctx);
   TGLC_BIGNUM *(*BN_new) (void);
-  void (*BN_init) (TGLC_BIGNUM *);
   void (*BN_free) (TGLC_BIGNUM *a);
   void (*BN_clear_free) (TGLC_BIGNUM *a);
   int (*BN_cmp) (const TGLC_BIGNUM *a, const TGLC_BIGNUM *b);
