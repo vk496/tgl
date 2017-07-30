@@ -155,9 +155,12 @@ static int rpc_send_packet (struct tgl_state *TLS, struct connection *c) {
   int total_len = len + 20;
   assert (total_len > 0 && !(total_len & 0xfc000003));
   total_len >>= 2;
+  
+  char data_length_divided_by_four = total_len; //Big endian
+  
   vlogprintf (E_DEBUG, "writing packet: total_len = %d, len = %d\n", total_len, len);
   if (total_len < 0x7f) {
-    assert (TLS->net_methods->write_out (c, &total_len, 1) == 1);
+    assert (TLS->net_methods->write_out (c, &data_length_divided_by_four, 1) == 1);
   } else {
     total_len = (total_len << 8) | 0x7f;
     assert (TLS->net_methods->write_out (c, &total_len, 4) == 4);
