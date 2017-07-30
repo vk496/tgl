@@ -11,6 +11,10 @@
 #ifndef PORTABLE_ENDIAN_H__
 #define PORTABLE_ENDIAN_H__
 
+#include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
+
 #if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 
 #	define __WINDOWS__
@@ -136,5 +140,7 @@
 #	error platform not supported
 
 #endif
+
+void* SwapBytes(void *pv, size_t bytes);
 
 #endif

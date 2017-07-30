@@ -40,6 +40,7 @@
 
 #include "tgl.h"
 #include "tgl-inner.h"
+#include "tl-parser/portable_endian.h"
 /* DH key exchange protocol data structures */
 #define	CODE_req_pq			0x60469778
 #define CODE_resPQ			0x05162463
@@ -135,10 +136,11 @@ extern int *tgl_packet_ptr;
 
 static inline void out_ints (const int *what, int items) {
   assert (packet_ptr + items <= packet_buffer + PACKET_BUFFER_SIZE);
-// Little endian?
-//  for(int i=0; i<items; i++){
-//      memcpy (packet_ptr, what +i*4, 4);
-//  }
+  
+//  #if BYTE_ORDER == BIG_ENDIAN
+//  what = SwapBytes(what, items * 4); //TODO 
+//  #endif
+
   memcpy (packet_ptr, what, items * 4);
   packet_ptr += items;
 }
