@@ -64,6 +64,7 @@ char *strndup (const char *s, size_t n) {
 #define INT64_PRINTF_MODIFIER "ll"
 #endif
 
+#include "tl-parser/portable_endian.h"
 #include "tl-parser/tl-tl.h"
 #include "generate.h"
 
@@ -121,14 +122,14 @@ int verbosity;
 
 int get_int (void) {
   assert (buf_ptr < buf_end);
-  return *(buf_ptr ++);
+  return le32toh(*(buf_ptr ++));
 }
 
 long long get_long (void) {
   assert (buf_ptr + 1 < buf_end);
   long long r = *(long long *)buf_ptr;
   buf_ptr += 2;
-  return r;
+  return le64toh(r);
 }
 
 static void *malloc0 (int size) {
