@@ -133,28 +133,32 @@ long long tgl_do_compute_rsa_key_fingerprint (TGLC_rsa *key);
 extern int *tgl_packet_buffer;
 extern int *tgl_packet_ptr;
 
-static inline void out_ints (const int *what, int len) {
-  assert (packet_ptr + len <= packet_buffer + PACKET_BUFFER_SIZE);
-  memcpy (packet_ptr, what, len * 4);
-  packet_ptr += len;
+static inline void out_ints (const int *what, int items) {
+  assert (packet_ptr + items <= packet_buffer + PACKET_BUFFER_SIZE);
+// Little endian?
+//  for(int i=0; i<items; i++){
+//      memcpy (packet_ptr, what +i*4, 4);
+//  }
+  memcpy (packet_ptr, what, items * 4);
+  packet_ptr += items;
 }
 
 
 static inline void out_int (int x) {
   assert (packet_ptr + 1 <= packet_buffer + PACKET_BUFFER_SIZE);
-  *packet_ptr++ = x;
+  *packet_ptr++ = htole32(x);
 }
 
 
 static inline void out_long (long long x) {
   assert (packet_ptr + 2 <= packet_buffer + PACKET_BUFFER_SIZE);
-  *(long long *)packet_ptr = x;
+  *(long long *)packet_ptr = htole64(x);
   packet_ptr += 2;
 }
 
 static inline void out_double (double x) {
   assert (packet_ptr + 2 <= packet_buffer + PACKET_BUFFER_SIZE);
-  *(double *)packet_ptr = x;
+  *(double *)packet_ptr = htole64(x);
   packet_ptr += 2;
 }
 

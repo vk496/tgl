@@ -138,9 +138,9 @@ static int encrypt_packet_buffer_aes_unauth (const char server_nonce[16], const 
 //
 static int rpc_send_packet (struct tgl_state *TLS, struct connection *c) {
   static struct {
-    long long auth_key_id;
-    long long out_msg_id;
-    int msg_len;
+    long long auth_key_id; // auth_key_id 8 bytes
+    long long out_msg_id;  // message_id 8 bytes
+    int msg_len; // message_length 4 bytes
   } unenc_msg_header;
 
   int len = (packet_ptr - packet_buffer) * 4;
@@ -149,8 +149,8 @@ static int rpc_send_packet (struct tgl_state *TLS, struct connection *c) {
   struct tgl_dc *DC = TLS->net_methods->get_dc (c);
   struct tgl_session *S = TLS->net_methods->get_session (c);
 
-  unenc_msg_header.out_msg_id = generate_next_msg_id (TLS, DC, S);
-  unenc_msg_header.msg_len = len;
+  unenc_msg_header.out_msg_id = htole64(generate_next_msg_id (TLS, DC, S)); //big endian
+  unenc_msg_header.msg_len = htole32(len); //big endian
 
   int total_len = len + 20;
   assert (total_len > 0 && !(total_len & 0xfc000003));
@@ -677,6 +677,10 @@ static double get_server_time (struct tgl_dc *DC) {
 }
 
 static long long generate_next_msg_id (struct tgl_state *TLS, struct tgl_dc *DC, struct tgl_session *S) {
+  long long time = get_server_time(DC);
+  time = time * (1LL << 32);
+  time = time & -4;
+    
   long long next_id = (long long) (get_server_time (DC) * (1LL << 32)) & -4;
   if (next_id <= TLS->last_msg_id) {
     next_id = TLS->last_msg_id  += 4;
