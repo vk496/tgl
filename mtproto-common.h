@@ -158,7 +158,8 @@ static inline void out_long (long long x) {
 
 static inline void out_double (double x) {
   assert (packet_ptr + 2 <= packet_buffer + PACKET_BUFFER_SIZE);
-  *(double *)packet_ptr = htole64(x);
+//  *(double *)packet_ptr = htole64(x);
+  *(double *)packet_ptr = htole64( *(long long*) (&x) ); //TODO improve
   packet_ptr += 2;
 }
 
