@@ -142,7 +142,7 @@ static int alarm_query (struct tgl_state *TLS, struct query *q) {
     out_long (q->msg_id);
     out_int (q->seq_no);
     out_int (4 * q->data_len);
-    out_ints (q->data, q->data_len);
+    out_bytes(q->data, q->data_len * sizeof(q->data_len));
 
     tglmp_encrypt_send_message (TLS, q->session->c, packet_buffer, packet_ptr - packet_buffer, q->flags & QUERY_FORCE_SEND);
   } else {
@@ -4262,7 +4262,7 @@ void tgl_do_import_card (struct tgl_state *TLS, int size, int *card, void (*call
   out_int (CODE_contacts_import_card);
   out_int (CODE_vector);
   out_int (size);
-  out_ints (card, size);
+  out_bytes(card, size * sizeof(size));
   tglq_send_query (TLS, TLS->DC_working, packet_ptr - packet_buffer, packet_buffer, &import_card_methods, 0, callback, callback_extra);
 }
 /* }}} */

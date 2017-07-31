@@ -224,7 +224,7 @@ static int send_req_pq_packet (struct tgl_state *TLS, struct connection *c) {
   tglt_secure_random (DC->nonce, 16);
   clear_packet ();
   out_int (CODE_req_pq);
-  out_ints ((int *)DC->nonce, 4);
+  out_bytes (DC->nonce, 16);
   rpc_send_packet (TLS, c);
 
   DC->state = st_reqpq_sent;
@@ -239,7 +239,7 @@ static int send_req_pq_temp_packet (struct tgl_state *TLS, struct connection *c)
   tglt_secure_random (DC->nonce, 16);
   clear_packet ();
   out_int (CODE_req_pq);
-  out_ints ((int *)DC->nonce, 4);
+  out_bytes (DC->nonce, 16);
   rpc_send_packet (TLS, c);
 
   DC->state = st_reqpq_sent_temp;
@@ -266,10 +266,10 @@ static void send_req_dh_packet (struct tgl_state *TLS, struct connection *c, TGL
   out_bignum (p);
   out_bignum (q);
 
-  out_ints ((int *) DC->nonce, 4);
-  out_ints ((int *) DC->server_nonce, 4);
+  out_bytes (DC->nonce, 16);
+  out_bytes (DC->server_nonce, 16);
   tglt_secure_random (DC->new_nonce, 32);
-  out_ints ((int *) DC->new_nonce, 8);
+  out_bytes (DC->new_nonce, 32);
   if (temp_key) {
     out_int (TLS->temp_key_expire_time);
   }
@@ -279,8 +279,8 @@ static void send_req_dh_packet (struct tgl_state *TLS, struct connection *c, TGL
 
   clear_packet ();
   out_int (CODE_req_DH_params);
-  out_ints ((int *) DC->nonce, 4);
-  out_ints ((int *) DC->server_nonce, 4);
+  out_bytes (DC->nonce, 16);
+  out_bytes (DC->server_nonce, 16);
   out_bignum (p);
   out_bignum (q);
 
@@ -303,8 +303,8 @@ static void send_dh_params (struct tgl_state *TLS, struct connection *c, TGLC_bn
   clear_packet ();
   packet_ptr += 5;
   out_int (CODE_client_DH_inner_data);
-  out_ints ((int *) DC->nonce, 4);
-  out_ints ((int *) DC->server_nonce, 4);
+  out_bytes (DC->nonce, 16);
+  out_bytes (DC->server_nonce, 16);
   out_long (0);
 
   TGLC_bn *dh_g = TGLC_bn_new ();
@@ -342,8 +342,8 @@ static void send_dh_params (struct tgl_state *TLS, struct connection *c, TGLC_bn
 
   clear_packet ();
   out_int (CODE_set_client_DH_params);
-  out_ints ((int *) DC->nonce, 4);
-  out_ints ((int *) DC->server_nonce, 4);
+  out_bytes (DC->nonce, 16);
+  out_bytes (DC->server_nonce, 16);
   out_cstring ((char *) encrypt_buffer, l);
 
   DC->state = temp_key ? st_client_dh_sent_temp : st_client_dh_sent;;
