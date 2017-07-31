@@ -40,7 +40,7 @@
 
 #include "tgl.h"
 #include "tgl-inner.h"
-#include "tl-parser/portable_endian.h"
+#include "portable_endian.h"
 /* DH key exchange protocol data structures */
 #define	CODE_req_pq			0x60469778
 #define CODE_resPQ			0x05162463
@@ -155,14 +155,14 @@ static inline void out_int (int x) {
 static inline void out_long (long long x) {
   assert (packet_ptr + 2 <= packet_buffer + PACKET_BUFFER_SIZE);
   *(long long *)packet_ptr = htole64(x);
-  packet_ptr += 2;
+  packet_ptr += 2; //8 bytes
 }
 
 static inline void out_double (double x) {
   assert (packet_ptr + 2 <= packet_buffer + PACKET_BUFFER_SIZE);
 //  *(double *)packet_ptr = htole64(x);
   *(double *)packet_ptr = htole64( *(long long*) (&x) ); //TODO improve
-  packet_ptr += 2;
+  packet_ptr += 2; //8 bytes
 }
 
 static inline void clear_packet (void) {

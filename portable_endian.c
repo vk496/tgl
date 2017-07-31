@@ -1,16 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 #include "portable_endian.h"
 
-void* SwapBytes(void *pv, size_t bytes) {
+void* SwapBytes(void *pv, size_t bytes) { //TODO imitate htole functions
     //https://stackoverflow.com/a/2182581/2757192
-    
-    assert(bytes % 2 != 0);
-    
+        
     char *p = (char*) malloc(bytes);
     char *pp =  pv;
     size_t lo, hi;
