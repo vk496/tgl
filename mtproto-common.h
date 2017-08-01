@@ -134,20 +134,20 @@ long long tgl_do_compute_rsa_key_fingerprint (TGLC_rsa *key);
 extern int *tgl_packet_buffer;
 extern int *tgl_packet_ptr;
 
-static inline void out_bytes (void* what, size_t items) {
-  assert (packet_ptr + items <= packet_buffer + PACKET_BUFFER_SIZE);
+static inline void out_bytes (void* what, size_t nbytes) {
+  assert (packet_ptr + nbytes <= packet_buffer + PACKET_BUFFER_SIZE);
   
   #if BYTE_ORDER == BIG_ENDIAN
-    what = SwapBytes(what, items);
+    what = SwapBytes(what, nbytes);
   #endif
 
-  memcpy (packet_ptr, what, items);
+  memcpy (packet_ptr, what, nbytes);
   
   #if BYTE_ORDER == BIG_ENDIAN
     free(what);
   #endif
   
-  packet_ptr += items >> 2; //TODO ugly way to solve. Find better way to increase address by n and not by n/4
+  packet_ptr += nbytes >> 2; //TODO ugly way to solve. Find better way to increase address by n and not by n/4
 }
 
 
