@@ -162,27 +162,27 @@ int tgln_write_out (struct connection *c, const void *_data, int len) {
   return x;
 }
 
-int tgln_read_in (struct connection *c, void *_data, int len) {
+int tgln_read_in (struct connection *c, void *_data, int nbytes) {
   unsigned char *data = _data;
-  if (!len) { return 0; }
-  assert (len > 0);
-  if (len > c->in_bytes) {
-    len = c->in_bytes;
+  if (!nbytes) { return 0; }
+  assert (nbytes > 0);
+  if (nbytes > c->in_bytes) {
+    nbytes = c->in_bytes;
   }
   int x = 0;
-  while (len) {
+  while (nbytes) {
     int y = c->in_head->wptr - c->in_head->rptr;
-    if (y > len) {
-      memcpy (data, c->in_head->rptr, len);
-      c->in_head->rptr += len;
-      c->in_bytes -= len;
-      return x + len;
+    if (y > nbytes) {
+      memcpy (data, c->in_head->rptr, nbytes);
+      c->in_head->rptr += nbytes;
+      c->in_bytes -= nbytes;
+      return x + nbytes;
     } else {
       memcpy (data, c->in_head->rptr, y);
       c->in_bytes -= y;
       x += y;
       data += y;
-      len -= y;
+      nbytes -= y;
       void *old = c->in_head;
       c->in_head = c->in_head->next;
       if (!c->in_head) {
@@ -194,25 +194,25 @@ int tgln_read_in (struct connection *c, void *_data, int len) {
   return x;
 }
 
-int tgln_read_in_lookup (struct connection *c, void *_data, int len) {
+int tgln_read_in_lookup (struct connection *c, void *_data, int nbytes) {
   unsigned char *data = _data;
-  if (!len || !c->in_bytes) { return 0; }
-  assert (len > 0);
-  if (len > c->in_bytes) {
-    len = c->in_bytes;
+  if (!nbytes || !c->in_bytes) { return 0; }
+  assert (nbytes > 0);
+  if (nbytes > c->in_bytes) {
+    nbytes = c->in_bytes;
   }
   int x = 0;
   struct connection_buffer *b = c->in_head;
-  while (len) {
+  while (nbytes) {
     int y = b->wptr - b->rptr;
-    if (y >= len) {
-      memcpy (data, b->rptr, len);
-      return x + len;
+    if (y >= nbytes) {
+      memcpy (data, b->rptr, nbytes);
+      return x + nbytes;
     } else {
       memcpy (data, b->rptr, y);
       x += y;
       data += y;
-      len -= y;
+      nbytes -= y;
       b = b->next;
     }
   }
@@ -461,31 +461,37 @@ static void try_rpc_read (struct connection *c) {
     if (c->in_bytes < 1) { return; }
     unsigned len = 0;
     unsigned t = 0;
+    //Declared as 4 bytes int. Safe use le32toh
+    
     assert (tgln_read_in_lookup (c, &len, 1) == 1);
+    len = le32toh(len); //big endian
     if (len >= 1 && len <= 0x7e) {
       if (c->in_bytes < (int)(1 + 4 * len)) { return; }
     } else {
       if (c->in_bytes < 4) { return; }
       assert (tgln_read_in_lookup (c, &len, 4) == 4);
+      len = le32toh(len); //big endian
       len = (len >> 8);
       if (c->in_bytes < (int)(4 + 4 * len)) { return; }
       len = 0x7f;
     }
 
     if (len >= 1 && len <= 0x7e) {
-      assert (tgln_read_in (c, &t, 1) == 1);    
+      assert (tgln_read_in (c, &t, 1) == 1);
+      t = le32toh(t); //big endian
       assert (t == len);
       assert (len >= 1);
     } else {
       assert (len == 0x7f);
       assert (tgln_read_in (c, &len, 4) == 4);
+      len = le32toh(len); //big endian
       len = (len >> 8);
       assert (len >= 1);
     }
     len *= 4;
     int op;
     assert (tgln_read_in_lookup (c, &op, 4) == 4);
-    if (c->methods->execute (TLS, c, op, len) < 0) {
+    if (c->methods->execute (TLS, c, le32toh(op) /* Big Endian */, len) < 0) {
       return;
     }
   }
