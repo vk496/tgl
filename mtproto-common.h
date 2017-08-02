@@ -135,7 +135,7 @@ extern int *tgl_packet_buffer;
 extern int *tgl_packet_ptr;
 
 static inline void out_bytes (void* what, size_t nbytes) {
-  assert (packet_ptr + nbytes <= packet_buffer + PACKET_BUFFER_SIZE);
+  assert (packet_ptr + (nbytes >> 2) <= packet_buffer + PACKET_BUFFER_SIZE);
   
   #if BYTE_ORDER == BIG_ENDIAN
     what = SwapBytes(what, nbytes);
@@ -147,7 +147,7 @@ static inline void out_bytes (void* what, size_t nbytes) {
     free(what);
   #endif
   
-  packet_ptr += nbytes >> 2; //TODO ugly way to solve. Find better way to increase address by n and not by n/4
+  packet_ptr += nbytes >> 2; //Buffer is 4bytes int. Fine divide here
 }
 
 
@@ -165,7 +165,7 @@ static inline void out_long (long long x) {
 
 static inline void out_double (double x) {
   assert (packet_ptr + 2 <= packet_buffer + PACKET_BUFFER_SIZE);
-//  *(double *)packet_ptr = htole64(x);
+//  https://stackoverflow.com/a/25067312/2757192
   *(double *)packet_ptr = htole64( *(long long*) (&x) ); //TODO improve
   packet_ptr += 2; //8 bytes
 }
@@ -311,6 +311,7 @@ int tgl_fetch_bignum (TGLC_bn *x);
 
 static inline int fetch_int (void) {
   assert (in_ptr + 1 <= in_end);
+//  return le32toh(*(in_ptr ++)); //TODO fails when fetch magic bytes
   return *(in_ptr ++);
 }
 
@@ -322,38 +323,54 @@ static inline int fetch_bool (void) {
 
 static inline int prefetch_int (void) {
   assert (in_ptr < in_end);
+//  return le32toh(*(in_ptr)); //TODO same as fetch_int ?
   return *(in_ptr);
 }
 
-static inline void prefetch_data (void *data, int size) {
-  assert (in_ptr + (size >> 2) <= in_end);
-  memcpy (data, in_ptr, size);
+static inline void prefetch_data (void *data, int nbytes) {
+  assert (in_ptr + (nbytes >> 2) <= in_end);
+  memcpy (data, in_ptr, nbytes);
 }
 
-static inline void fetch_data (void *data, int size) {
-  assert (in_ptr + (size >> 2) <= in_end);
-  memcpy (data, in_ptr, size);
-  assert (!(size & 3));
-  in_ptr += (size >> 2);
+static inline void fetch_data (void *data, int nbytes) {
+  assert (in_ptr + (nbytes >> 2) <= in_end);
+  memcpy (data, in_ptr, nbytes);
+  assert (!(nbytes & 3));
+  in_ptr += (nbytes >> 2);
 }
 
 static inline long long fetch_long (void) {
   assert (in_ptr + 2 <= in_end);
   long long r = *(long long *)in_ptr;
   in_ptr += 2;
-  return r;
+  return le64toh(r); //Big Endian
 }
 
 static inline double fetch_double (void) {
   assert (in_ptr + 2 <= in_end);
   double r = *(double *)in_ptr;
   in_ptr += 2;
-  return r;
+  return le64toh( *(long long*) (&r)); //Big Endian
 }
 
 static inline void fetch_ints (void *data, int count) {
   assert (in_ptr + count <= in_end);
-  memcpy (data, in_ptr, 4 * count);
+  
+  #if BYTE_ORDER == BIG_ENDIAN
+    void* data2 = SwapBytes(in_ptr, count * 4);
+    memcpy (data, data2, 4 * count);
+    free(data2);
+  #elif BYTE_ORDER == LITTLE_ENDIAN
+    
+    memcpy (data, in_ptr, 4 * count);
+    
+  #else
+    
+    vlogprintf (E_ERROR, "ENDIAN NOT SUPPORTED");
+    exit(EXIT_FAILURE);
+    
+  #endif
+  
   in_ptr += count;
 }
     
