@@ -311,8 +311,8 @@ int tgl_fetch_bignum (TGLC_bn *x);
 
 static inline int fetch_int (void) {
   assert (in_ptr + 1 <= in_end);
-//  return le32toh(*(in_ptr ++)); //TODO fails when fetch magic bytes
-  return *(in_ptr ++);
+  return le32toh((int) *(in_ptr++)); //Big Endian. Without casting, not works
+//  return *(in_ptr ++);
 }
 
 static inline int fetch_bool (void) {
@@ -323,8 +323,8 @@ static inline int fetch_bool (void) {
 
 static inline int prefetch_int (void) {
   assert (in_ptr < in_end);
-//  return le32toh(*(in_ptr)); //TODO same as fetch_int ?
-  return *(in_ptr);
+  return le32toh((int) *(in_ptr)); //Big Endian. Without casting, not works
+//  return *(in_ptr);
 }
 
 static inline void prefetch_data (void *data, int nbytes) {
