@@ -205,7 +205,7 @@ static inline int prefetch_strlen (void) {
   if (in_ptr >= in_end) { 
     return -1; 
   }
-  unsigned l = *in_ptr;
+  unsigned l = le32toh((unsigned int) *in_ptr); //Big Endian
   if ((l & 0xff) < 0xfe) { 
     l &= 0xff;
     return (in_end >= in_ptr + (l >> 2) + 1) ? (int)l : -1;
@@ -262,7 +262,7 @@ static inline int fetch_update_str (char **s) {
 }
 
 static inline int fetch_update_int (int *value) {
-  if (*value == *in_ptr) {
+  if (*value == *in_ptr) { //TODO review Big Endian
     in_ptr ++;
     return 0;
   } else {
@@ -272,7 +272,7 @@ static inline int fetch_update_int (int *value) {
 }
 
 static inline int fetch_update_long (long long *value) {
-  if (*value == *(long long *)in_ptr) {
+  if (*value == *(long long *)in_ptr) { //TODO review Big Endian
     in_ptr += 2;
     return 0;
   } else {
@@ -283,7 +283,7 @@ static inline int fetch_update_long (long long *value) {
 }
 
 static inline int set_update_int (int *value, int new_value) {
-  if (*value == new_value) {
+  if (*value == new_value) { //TODO review Big Endian
     return 0;
   } else {
     *value = new_value;
