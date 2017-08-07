@@ -134,18 +134,15 @@ long long tgl_do_compute_rsa_key_fingerprint (TGLC_rsa *key);
 extern int *tgl_packet_buffer;
 extern int *tgl_packet_ptr;
 
-static inline void out_bytes (void* what, size_t nbytes) {
+/**
+ * Send bytes without endian conversion
+ * @param what Pointer to data
+ * @param nbytes Bytes count
+ */
+static inline void out_bytes_literal (void* what, size_t nbytes) {
   assert (packet_ptr + (nbytes >> 2) <= packet_buffer + PACKET_BUFFER_SIZE);
   
-  #if BYTE_ORDER == BIG_ENDIAN
-    what = SwapBytes(what, nbytes);
-  #endif
-
   memcpy (packet_ptr, what, nbytes);
-  
-  #if BYTE_ORDER == BIG_ENDIAN
-    free(what);
-  #endif
   
   packet_ptr += nbytes >> 2; //Buffer is 4bytes int. Fine divide here
 }
@@ -205,7 +202,7 @@ static inline int prefetch_strlen (void) {
   if (in_ptr >= in_end) { 
     return -1; 
   }
-  unsigned l = le32toh((unsigned int) *in_ptr); //Big Endian
+  unsigned l = le32toh((unsigned int) *in_ptr); //TODO Not work on Big Endian
   if ((l & 0xff) < 0xfe) { 
     l &= 0xff;
     return (in_end >= in_ptr + (l >> 2) + 1) ? (int)l : -1;
@@ -355,6 +352,8 @@ static inline double fetch_double (void) {
 
 static inline void fetch_ints (void *data, int count) {
   assert (in_ptr + count <= in_end);
+  
+  //TODO Review if Big Endian conversion should be done
   
   #if BYTE_ORDER == BIG_ENDIAN
     void* data2 = SwapBytes(in_ptr, count * 4);
