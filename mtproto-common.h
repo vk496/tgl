@@ -202,7 +202,7 @@ static inline int prefetch_strlen (void) {
   if (in_ptr >= in_end) { 
     return -1; 
   }
-  unsigned l = le32toh((unsigned int) *in_ptr); //TODO Not work on Big Endian
+  unsigned l = le32toh((unsigned int) *in_ptr);
   if ((l & 0xff) < 0xfe) { 
     l &= 0xff;
     return (in_end >= in_ptr + (l >> 2) + 1) ? (int)l : -1;
@@ -217,8 +217,8 @@ static inline int prefetch_strlen (void) {
 static inline char *fetch_str (int len) {
   assert (len >= 0);
   if (len < 254) {
-    char *str = (char *) in_ptr + 1;
-    in_ptr += 1 + (len >> 2);
+    char *str = (char *) in_ptr + 1; //skip "Single-byte prefix denoting length"
+    in_ptr += 1 + (len >> 2); //Increase as multiple of 4
     return str;
   } else {
     char *str = (char *) in_ptr + 4;
