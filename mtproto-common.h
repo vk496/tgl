@@ -350,26 +350,16 @@ static inline double fetch_double (void) {
   return le64toh( *(long long*) (&r)); //Big Endian
 }
 
+/**
+ * Recieve bytes without endian conversion
+ * @param data
+ * @param count
+ */
 static inline void fetch_ints (void *data, int count) {
   assert (in_ptr + count <= in_end);
   
-  //TODO Review if Big Endian conversion should be done
-  
-  #if BYTE_ORDER == BIG_ENDIAN
-    void* data2 = SwapBytes(in_ptr, count * 4);
-    memcpy (data, data2, 4 * count);
-    free(data2);
-  #elif BYTE_ORDER == LITTLE_ENDIAN
-    
-    memcpy (data, in_ptr, 4 * count);
-    
-  #else
-    
-    vlogprintf (E_ERROR, "ENDIAN NOT SUPPORTED");
-    exit(EXIT_FAILURE);
-    
-  #endif
-  
+  memcpy (data, in_ptr, 4 * count);
+
   in_ptr += count;
 }
     
