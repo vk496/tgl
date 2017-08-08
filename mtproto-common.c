@@ -221,7 +221,7 @@ void tgl_out_cstring (const char *str, long len) {
   if (len < 254) {
     *dest++ = len;
   } else {
-    *packet_ptr = (len << 8) + 0xfe;
+    *packet_ptr = htole32((len << 8) + 0xfe); //Big Endian
     dest += 4;
   }
   memcpy (dest, str, len);
@@ -247,7 +247,7 @@ void tgl_out_cstring_careful (const char *str, long len) {
     if (dest != str) {
       memmove (dest, str, len);
     }
-    *packet_ptr = (len << 8) + 0xfe;
+    *packet_ptr = htole32((len << 8) + 0xfe); //TODO big endian?
   }
   dest += len;
   while ((long) dest & 3) {
