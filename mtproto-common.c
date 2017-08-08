@@ -187,9 +187,9 @@ int tgl_serialize_bignum (TGLC_bn *b, char *buffer, int maxlen) {
     return -reqlen;
   }
   if (itslen < 254) {
-    *buffer++ = itslen;
+    *buffer++ = itslen; //write less than 1 byte. No need endian conver
   } else {
-    *(int *)buffer = (itslen << 8) + 0xfe;
+    *(int *)buffer = htole32((itslen << 8) + 0xfe); //big endian
     buffer += 4;
   }
   int l = TGLC_bn_bn2bin (b, (unsigned char *)buffer);
@@ -211,7 +211,7 @@ long long tgl_do_compute_rsa_key_fingerprint (TGLC_rsa *key) {
   int l2 = tgl_serialize_bignum (TGLC_rsa_e (key), tempbuff + l1, 4096 - l1);
   assert (l2 > 0 && l1 + l2 <= 4096);
   TGLC_sha1 ((unsigned char *)tempbuff, l1 + l2, sha);
-  return *(long long *)(sha + 12);
+  return le64toh(*(long long *)(sha + 12)); //Last 8 bytes. Big Endian
 }
 
 void tgl_out_cstring (const char *str, long len) {
