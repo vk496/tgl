@@ -110,7 +110,7 @@ void bl_do_set_auth_key (struct tgl_state *TLS, int num, unsigned char *buf) /* 
   
   static unsigned char sha1_buffer[20];
   TGLC_sha1 ((void *)TLS->DC_list[num]->auth_key, 256, sha1_buffer);
-  TLS->DC_list[num]->auth_key_id = *(long long *)(sha1_buffer + 12);
+  TLS->DC_list[num]->auth_key_id = le64toh(*(long long *)(sha1_buffer + 12)); //Big Endian
 
   TLS->DC_list[num]->flags |= TGLDCF_AUTHORIZED;
 }

@@ -291,6 +291,7 @@ static void send_req_dh_packet (struct tgl_state *TLS, struct connection *c, TGL
   TGLC_bn_free (q);
   DC->state = temp_key ? st_reqdh_sent_temp : st_reqdh_sent;
   rpc_send_packet (TLS, c);
+  //TODO: Should be OK with Big Endian, but need to compare with little endian output to be sure...
 }
 /* }}} */
 
@@ -604,7 +605,7 @@ static int process_auth_complete (struct tgl_state *TLS, struct connection *c, c
     TGLC_sha1 ((unsigned char *)DC->auth_key, 256, sha1_buffer);
   } else {
     TGLC_sha1 ((unsigned char *)DC->temp_auth_key, 256, sha1_buffer);
-    DC->temp_auth_key_id = *(long long *)(sha1_buffer + 12);
+    DC->temp_auth_key_id = le64toh(*(long long *)(sha1_buffer + 12)); //TODO: Review Big Endian
   }
 
   DC->server_salt = *(long long *)DC->server_nonce ^ *(long long *)DC->new_nonce;
