@@ -605,10 +605,10 @@ static int process_auth_complete (struct tgl_state *TLS, struct connection *c, c
     TGLC_sha1 ((unsigned char *)DC->auth_key, 256, sha1_buffer);
   } else {
     TGLC_sha1 ((unsigned char *)DC->temp_auth_key, 256, sha1_buffer);
-    DC->temp_auth_key_id = le64toh(*(long long *)(sha1_buffer + 12)); //TODO: Review Big Endian
+    DC->temp_auth_key_id = le64toh(*(long long *)(sha1_buffer + 12)); //TODO: Review if Big Endian in protocol
   }
 
-  DC->server_salt = *(long long *)DC->server_nonce ^ *(long long *)DC->new_nonce;
+  DC->server_salt = le64toh(*(long long *)DC->server_nonce ^ *(long long *)DC->new_nonce); //Big Endian
 
   DC->state = st_authorized;
 
