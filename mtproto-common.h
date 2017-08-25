@@ -156,14 +156,14 @@ static inline void out_int (int x) {
 
 static inline void out_long (long long x) {
   assert (packet_ptr + 2 <= packet_buffer + PACKET_BUFFER_SIZE);
-  *(long long *)packet_ptr = htole64(x);
+  *(long long *)packet_ptr = htole64(x); //Big endian
   packet_ptr += 2; //8 bytes
 }
 
 static inline void out_double (double x) {
   assert (packet_ptr + 2 <= packet_buffer + PACKET_BUFFER_SIZE);
 //  https://stackoverflow.com/a/25067312/2757192
-  *(double *)packet_ptr = htole64( *(long long*) (&x) ); //TODO improve
+  *(double *)packet_ptr = htole64( *(long long*) (&x) ); //TODO Big Endian. improve?
   packet_ptr += 2; //8 bytes
 }
 
@@ -202,7 +202,7 @@ static inline int prefetch_strlen (void) {
   if (in_ptr >= in_end) { 
     return -1; 
   }
-  unsigned l = le32toh((unsigned int) *in_ptr);
+  unsigned l = le32toh((unsigned int) *in_ptr); //Big Endian
   if ((l & 0xff) < 0xfe) { 
     l &= 0xff;
     return (in_end >= in_ptr + (l >> 2) + 1) ? (int)l : -1;
@@ -314,8 +314,8 @@ static inline int fetch_int (void) {
 
 static inline int fetch_bool (void) {
   assert (in_ptr + 1 <= in_end);
-  assert (*(in_ptr) == (int)CODE_bool_true || *(in_ptr) == (int)CODE_bool_false);
-  return *(in_ptr ++) == (int)CODE_bool_true;
+  assert (*(in_ptr) == (int)CODE_bool_true || *(in_ptr) == (int)CODE_bool_false); //TODO: Big Endian
+  return *(in_ptr ++) == (int)CODE_bool_true; //TODO: Big Endian
 }
 
 static inline int prefetch_int (void) {

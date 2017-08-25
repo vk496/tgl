@@ -526,7 +526,7 @@ void bl_do_encr_chat_exchange (struct tgl_state *TLS, tgl_peer_id_t id, long lon
     memcpy (P->encr_chat.exchange_key, key, 256);
   
     TGLC_sha1 ((unsigned char *)P->encr_chat.exchange_key, 256, sha_buffer);
-    P->encr_chat.exchange_key_fingerprint = *(long long *)(sha_buffer + 12);
+    P->encr_chat.exchange_key_fingerprint = le64toh(*(long long *)(sha_buffer + 12)); //big Endian
     break;
   case tgl_sce_committed:
     memcpy (P->encr_chat.exchange_key, P->encr_chat.key, 256);
@@ -535,7 +535,7 @@ void bl_do_encr_chat_exchange (struct tgl_state *TLS, tgl_peer_id_t id, long lon
     memcpy (P->encr_chat.key, key, 256);
   
     TGLC_sha1 ((unsigned char *)P->encr_chat.key, 256, sha_buffer);
-    P->encr_chat.key_fingerprint = *(long long *)(sha_buffer + 12);
+    P->encr_chat.key_fingerprint = le64toh(*(long long *)(sha_buffer + 12)); //Big Endian
     break;
   case tgl_sce_confirmed:
     P->encr_chat.exchange_state = tgl_sce_none;

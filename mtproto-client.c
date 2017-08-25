@@ -178,8 +178,11 @@ static int rpc_send_message (struct tgl_state *TLS, struct connection *c, void *
   assert (len > 0 && !(len & 0xfc000003));
 
   int total_len = len >> 2;
+  
+  char data_length_divided_by_four = total_len; //Big endian
+  
   if (total_len < 0x7f) {
-    assert (TLS->net_methods->write_out (c, &total_len, 1) == 1);
+    assert (TLS->net_methods->write_out (c, &data_length_divided_by_four, 1) == 1);
   } else {
     total_len = (total_len << 8) | 0x7f;
     assert (TLS->net_methods->write_out (c, &total_len, 4) == 4);
@@ -731,7 +734,7 @@ static int aes_encrypt_message (struct tgl_state *TLS, char *key, struct encrypt
   int enc_len = (MINSZ - UNENCSZ) + enc->msg_len;
   assert (enc->msg_len >= 0 && enc->msg_len <= MAX_MESSAGE_INTS * 4 - 16 && !(enc->msg_len & 3));
   TGLC_sha1 ((unsigned char *) &enc->server_salt, enc_len, sha1_buffer);
-  vlogprintf (E_DEBUG, "sending message with sha1 %08x\n", *(int *)sha1_buffer);
+  vlogprintf (E_DEBUG, "sending message with sha1 %08x\n", be32toh(*(int *)sha1_buffer)); //Big Endian?
   memcpy (enc->msg_key, sha1_buffer + 4, 16);
   tgl_init_aes_auth (key, enc->msg_key, 1);
   return tgl_pad_aes_encrypt ((char *) &enc->server_salt, enc_len, (char *) &enc->server_salt, MAX_MESSAGE_INTS * 4 + (MINSZ - UNENCSZ));
