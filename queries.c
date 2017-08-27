@@ -506,7 +506,7 @@ void tgl_do_insert_header (struct tgl_state *TLS) {
   out_int (CODE_invoke_with_layer);
   out_int (TGL_SCHEME_LAYER);
   out_int (CODE_init_connection);
-  out_int (TLS->app_id);
+  out_int (TLS->app_id); //TODO review Big Endian
 #ifndef WIN32
   if (allow_send_linux_version) {
     struct utsname st;
