@@ -79,6 +79,7 @@
 #define O_BINARY 0
 #endif
 
+int debug_hacker(struct tgl_state *TLS, int* buffer, int bytes_size, const char *message, ...); //TODO remove
 static void out_peer_id (struct tgl_state *TLS, tgl_peer_id_t id);
 static struct query_methods send_msgs_methods;
 
@@ -511,12 +512,15 @@ void tgl_do_insert_header (struct tgl_state *TLS) {
   if (allow_send_linux_version) {
     struct utsname st;
     uname (&st);
-    out_string (st.machine);
+//    out_string (st.machine);
+    out_string ("x86_64"); //TODO remove
     static char buf[4096];
     tsnprintf (buf, sizeof (buf) - 1, "%.999s %.999s %.999s", st.sysname, st.release, st.version);
-    out_string (buf);
+//    out_string (buf); 
+    out_string("Linux 4.9.43-1-MANJARO #1 SMP PREEMPT Sun Aug 13 20:28:47 UTC 2017"); //TODO remove
     tsnprintf (buf, sizeof (buf) - 1, "%s (TGL %s)", TLS->app_version, TGL_VERSION);
-    out_string (buf);
+//    out_string (buf);
+    out_string ("Telegram-cli 1.4.1 (TGL 2.1.0)."); //TODO remove
     out_string ("En");
   } else {
     out_string ("x86");
@@ -858,6 +862,7 @@ void tgl_do_help_get_config_dc (struct tgl_state *TLS, struct tgl_dc *D, void (*
   clear_packet ();
   tgl_do_insert_header (TLS);
   out_int (CODE_help_get_config);
+  debug_hacker(TLS, packet_buffer, (packet_ptr - packet_buffer)*4, "DC #%d - out _get_config =", D->id); //TODO remove
   tglq_send_query_ex (TLS, D, packet_ptr - packet_buffer, packet_buffer, &help_get_config_methods, 0, callback, callback_extra, 2);
 }
 /* }}} */

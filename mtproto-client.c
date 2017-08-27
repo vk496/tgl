@@ -108,7 +108,7 @@ static TGLC_rsa *rsa_load_public_key (struct tgl_state *TLS, const char *public_
   return res;
 }
 
-static int debug_hacker(struct tgl_state *TLS, int* buffer, int bytes_size, const char *message, ...) {
+int debug_hacker(struct tgl_state *TLS, int* buffer, int bytes_size, const char *message, ...) {
 
     if (TLS->verbosity >= E_HACKER) {
         printf(" *** ");
@@ -256,10 +256,10 @@ static int send_req_pq_packet (struct tgl_state *TLS, struct connection *c) {
   tglt_secure_random (DC->nonce, 16);
   clear_packet ();
   out_int (CODE_req_pq);
-  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "(req_pq#60469778) out %%(req_pq) ="));
+  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "DC #%d - (req_pq#60469778) out %%(req_pq) =", DC->id));
   
   out_bytes_literal (DC->nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(req_pq#60469778) out nonce ="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (req_pq#60469778) out nonce =", DC->id));
 
   rpc_send_packet (TLS, c);
 
@@ -297,52 +297,52 @@ static void send_req_dh_packet (struct tgl_state *TLS, struct connection *c, TGL
   clear_packet ();
   packet_ptr += 5;
   out_int (temp_key ? CODE_p_q_inner_data_temp : CODE_p_q_inner_data);
-  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "(p_q_inner_data#83c95aec) out %%(p_q_inner_data) ="));
+  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "DC #%d - (p_q_inner_data#83c95aec) out %%(p_q_inner_data) =", DC->id));
   
   out_bignum (pq);
-  assert(!debug_hacker(TLS, packet_ptr - 3, 12, "(p_q_inner_data#83c95aec) out pq ="));
+  assert(!debug_hacker(TLS, packet_ptr - 3, 12, "DC #%d - (p_q_inner_data#83c95aec) out pq =", DC->id));
   
   out_bignum (p);
-  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "(p_q_inner_data#83c95aec) out p ="));
+  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "DC #%d - (p_q_inner_data#83c95aec) out p =", DC->id));
   
   out_bignum (q);
-  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "(p_q_inner_data#83c95aec) out q ="));
+  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "DC #%d - (p_q_inner_data#83c95aec) out q =", DC->id));
 
   out_bytes_literal (DC->nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(p_q_inner_data#83c95aec) out nonce="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (p_q_inner_data#83c95aec) out nonce=", DC->id));
   
   out_bytes_literal (DC->server_nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(p_q_inner_data#83c95aec) out server_nonce="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (p_q_inner_data#83c95aec) out server_nonce=", DC->id));
   
   tglt_secure_random (DC->new_nonce, 32);
   out_bytes_literal (DC->new_nonce, 32);
-  assert(!debug_hacker(TLS, packet_ptr - 8, 32, "(p_q_inner_data#83c95aec) out server_nonce="));
+  assert(!debug_hacker(TLS, packet_ptr - 8, 32, "DC #%d - (p_q_inner_data#83c95aec) out server_nonce=", DC->id));
   
   if (temp_key) {
     out_int (TLS->temp_key_expire_time);
   }
   TGLC_sha1 ((unsigned char *) (packet_buffer + 5), (packet_ptr - packet_buffer - 5) * 4, (unsigned char *) packet_buffer);
-  assert(!debug_hacker(TLS, (int*) packet_buffer, 20, "(p_q_inner_data#83c95aec) out _sha1 ="));
+  assert(!debug_hacker(TLS, (int*) packet_buffer, 20, "DC #%d - (p_q_inner_data#83c95aec) out _sha1 =", DC->id));
   int l = encrypt_packet_buffer (TLS, DC);
 
   clear_packet ();
   out_int (CODE_req_DH_params);
-  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "(req_DH_params#d712e4be) out %%(req_DH_params) ="));
+  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "DC #%d - (req_DH_params#d712e4be) out %%(req_DH_params) =", DC->id));
   
   out_bytes_literal (DC->nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(req_DH_params#d712e4be) out nonce ="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (req_DH_params#d712e4be) out nonce =", DC->id));
   
   out_bytes_literal (DC->server_nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(req_DH_params#d712e4be) out server_nonce ="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (req_DH_params#d712e4be) out server_nonce =", DC->id));
   
   out_bignum (p);
-  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "(req_DH_params#d712e4be) out p ="));
+  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "DC #%d - (req_DH_params#d712e4be) out p =", DC->id));
 
   out_bignum (q);
-  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "(req_DH_params#d712e4be) out q ="));
+  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "DC #%d - (req_DH_params#d712e4be) out q =", DC->id));
 
   out_long (TLS->rsa_key_fingerprint[DC->rsa_key_idx]);
-  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "(req_DH_params#d712e4be) out public_key_fingerprint ="));
+  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "DC #%d - (req_DH_params#d712e4be) out public_key_fingerprint =", DC->id));
   
   out_cstring ((char *) encrypt_buffer, l);
 
@@ -364,16 +364,16 @@ static void send_dh_params (struct tgl_state *TLS, struct connection *c, TGLC_bn
   packet_ptr += 5;
   
   out_int (CODE_client_DH_inner_data);
-  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "(client_DH_inner_data#6643b654) out %%(client_DH_inner_data) ="));
+  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "DC #%d - (client_DH_inner_data#6643b654) out %%(client_DH_inner_data) =", DC->id));
   
   out_bytes_literal (DC->nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(client_DH_inner_data#6643b654) out nonce ="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (client_DH_inner_data#6643b654) out nonce =", DC->id));
   
   out_bytes_literal (DC->server_nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(client_DH_inner_data#6643b654) out server_nonce ="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (client_DH_inner_data#6643b654) out server_nonce =", DC->id));
   
   out_long (0);
-  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "(client_DH_inner_data#6643b654) out retry_id ="));
+  assert(!debug_hacker(TLS, packet_ptr - 2, 8, "DC #%d - (client_DH_inner_data#6643b654) out retry_id =", DC->id));
 
   TGLC_bn *dh_g = TGLC_bn_new ();
   ensure (TGLC_bn_set_word (dh_g, g));
@@ -387,7 +387,7 @@ static void send_dh_params (struct tgl_state *TLS, struct connection *c, TGLC_bn
   ensure_ptr (y);
   ensure (TGLC_bn_mod_exp (y, dh_g, dh_power, dh_prime, TLS->TGLC_bn_ctx));
   out_bignum (y);
-  assert(!debug_hacker(TLS, packet_ptr - 65, 260, "(client_DH_inner_data#6643b654) out g_b ="));
+  assert(!debug_hacker(TLS, packet_ptr - 65, 260, "DC #%d - (client_DH_inner_data#6643b654) out g_b =", DC->id));
   TGLC_bn_free (y);
 
   TGLC_bn *auth_key_num = TGLC_bn_new ();
@@ -401,26 +401,26 @@ static void send_dh_params (struct tgl_state *TLS, struct connection *c, TGLC_bn
     memset (key, 0, 256 - l);
   }
   
-  assert(!debug_hacker(TLS, temp_key ? (int*)DC->temp_auth_key : (int*)DC->auth_key, l, "(client_DH_inner_data#6643b654) in _auth_key ="));
+  assert(!debug_hacker(TLS, temp_key ? (int*)DC->temp_auth_key : (int*)DC->auth_key, l, "DC #%d - (client_DH_inner_data#6643b654) in _auth_key =", DC->id));
 
   TGLC_bn_free (dh_power);
   TGLC_bn_free (auth_key_num);
   TGLC_bn_free (dh_g);
 
   TGLC_sha1 ((unsigned char *) (packet_buffer + 5), (packet_ptr - packet_buffer - 5) * 4, (unsigned char *) packet_buffer);
-  assert(!debug_hacker(TLS, (int*) packet_buffer, 20, "(client_DH_inner_data#6643b654) out _sha1 ="));
+  assert(!debug_hacker(TLS, (int*) packet_buffer, 20, "DC #%d - (client_DH_inner_data#6643b654) out _sha1 =", DC->id));
 
   l = encrypt_packet_buffer_aes_unauth (DC->server_nonce, DC->new_nonce);
 
   clear_packet ();
   out_int (CODE_set_client_DH_params);
-  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "(set_client_DH_params#f5045f1f) out %%(set_client_DH_params) ="));
+  assert(!debug_hacker(TLS, packet_ptr - 1, 4, "DC #%d - (set_client_DH_params#f5045f1f) out %%(set_client_DH_params) =", DC->id));
   
   out_bytes_literal (DC->nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(set_client_DH_params#f5045f1f) out nonce ="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (set_client_DH_params#f5045f1f) out nonce =", DC->id));
   
   out_bytes_literal (DC->server_nonce, 16);
-  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "(set_client_DH_params#f5045f1f) out server_nonce ="));
+  assert(!debug_hacker(TLS, packet_ptr - 4, 16, "DC #%d - (set_client_DH_params#f5045f1f) out server_nonce =", DC->id));
   
   out_cstring ((char *) encrypt_buffer, l);
 
@@ -448,11 +448,11 @@ static int process_respq_answer (struct tgl_state *TLS, struct connection *c, ch
 
   struct tgl_dc *DC = TLS->net_methods->get_dc (c);
 
-  assert(!debug_hacker(TLS, in_ptr, 4, "(resPQ#05162463) in %%(resPQ) ="));
+  assert(!debug_hacker(TLS, in_ptr, 4, "DC #%d - (resPQ#05162463) in %%(resPQ) =", DC->id));
   assert (fetch_int() == CODE_res_p_q);
 
   static unsigned char tmp[16];
-  assert(!debug_hacker(TLS, in_ptr, 16, "(resPQ#05162463) in nonce ="));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (resPQ#05162463) in nonce =", DC->id));
   vlogprintf (E_ERROR, "nonce mismatch\n");
   fetch_ints (tmp, 4);
   if (memcmp (tmp, DC->nonce, 16)) {
@@ -460,17 +460,17 @@ static int process_respq_answer (struct tgl_state *TLS, struct connection *c, ch
     return -1;
   }
   
-  assert(!debug_hacker(TLS, in_ptr, 16, "(resPQ#05162463) in server_nonce ="));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (resPQ#05162463) in server_nonce =", DC->id));
   fetch_ints (DC->server_nonce, 4);
   
   TGLC_bn *pq = TGLC_bn_new ();
-  assert(!debug_hacker(TLS, in_ptr, 12, "(resPQ#05162463) in pq ="));
+  assert(!debug_hacker(TLS, in_ptr, 12, "DC #%d - (resPQ#05162463) in pq =", DC->id));
   assert (fetch_bignum (pq) >= 0);
 
-  assert(!debug_hacker(TLS, in_ptr, 4, "(resPQ#05162463) in %%(Vector long) ="));
+  assert(!debug_hacker(TLS, in_ptr, 4, "DC #%d - (resPQ#05162463) in %%(Vector long) =", DC->id));
   assert (fetch_int ()  == CODE_vector);
   
-  assert(!debug_hacker(TLS, in_ptr, 4, "(resPQ#05162463) in fingerprints[] ="));
+  assert(!debug_hacker(TLS, in_ptr, 4, "DC #%d - (resPQ#05162463) in fingerprints[] =", DC->id));
 
   int fingerprints_num = fetch_int ();
   assert (fingerprints_num >= 0);
@@ -479,7 +479,7 @@ static int process_respq_answer (struct tgl_state *TLS, struct connection *c, ch
   int i;
   for (i = 0; i < fingerprints_num; i++) {
     int j;
-    assert(!debug_hacker(TLS, in_ptr, 8, "(resPQ#05162463) in fingerprints[%d] =", i));
+    assert(!debug_hacker(TLS, in_ptr, 8, "DC #%d - (resPQ#05162463) in fingerprints[%d] =", i));
     long long fprint = fetch_long ();
     for (j = 0; j < TLS->rsa_key_num; j++) {
       if (TLS->rsa_key_loaded[j]) {
@@ -524,20 +524,20 @@ static int process_dh_answer (struct tgl_state *TLS, struct connection *c, char 
 
   struct tgl_dc *DC = TLS->net_methods->get_dc (c);
 
-  assert(!debug_hacker(TLS, in_ptr, 4, "(server_DH_params#) in %%(server_DH_params_) ="));
+  assert(!debug_hacker(TLS, in_ptr, 4, "DC #%d - (server_DH_params#) in %%(server_DH_params_) =", DC->id));
   unsigned op = fetch_int ();
   assert (op == CODE_server__d_h_params_ok || op == CODE_server__d_h_params_fail);
 
   int tmp[4];
 
-  assert(!debug_hacker(TLS, in_ptr, 16, "(server_DH_params#) in nonce ="));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (server_DH_params#) in nonce =", DC->id));
   fetch_ints (tmp, 4);
   if (memcmp (tmp, DC->nonce, 16)) {
     vlogprintf (E_ERROR, "nonce mismatch\n");
     return -1;
   }
   
-  assert(!debug_hacker(TLS, in_ptr, 16, "(server_DH_params#) in server_nonce ="));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (server_DH_params#) in server_nonce =", DC->id));
   fetch_ints (tmp, 4);
   if (memcmp (tmp, DC->server_nonce, 16)) {
     vlogprintf (E_ERROR, "nonce mismatch\n");
@@ -568,32 +568,32 @@ static int process_dh_answer (struct tgl_state *TLS, struct connection *c, char 
   }
   in_ptr = decrypt_buffer + 5;
 
-  assert(!debug_hacker(TLS, in_ptr, 4, "(server_DH_inner_data#b5890dba) in %%(server_DH_inner_data) ="));
+  assert(!debug_hacker(TLS, in_ptr, 4, "DC #%d - (server_DH_inner_data#b5890dba) in %%(server_DH_inner_data) =", DC->id));
   assert (fetch_int ()  == (int)CODE_server_DH_inner_data);
   
-  assert(!debug_hacker(TLS, in_ptr, 16, "(server_DH_inner_data#b5890dba) in nonce"));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (server_DH_inner_data#b5890dba) in nonce"));
   fetch_ints (tmp, 4);
   if (memcmp (tmp, DC->nonce, 16)) {
     vlogprintf (E_ERROR, "nonce mismatch\n");
     return -1;
   }
   
-  assert(!debug_hacker(TLS, in_ptr, 16, "(server_DH_inner_data#b5890dba) in server_nonce ="));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (server_DH_inner_data#b5890dba) in server_nonce =", DC->id));
   fetch_ints (tmp, 4);
   if (memcmp (tmp, DC->server_nonce, 16)) {
     vlogprintf (E_ERROR, "nonce mismatch\n");
     return -1;
   }
   
-  assert(!debug_hacker(TLS, in_ptr, 4, "(server_DH_inner_data#b5890dba) in g ="));
+  assert(!debug_hacker(TLS, in_ptr, 4, "DC #%d - (server_DH_inner_data#b5890dba) in g =", DC->id));
   int g = fetch_int ();
 
   TGLC_bn *dh_prime = TGLC_bn_new ();
   TGLC_bn *g_a = TGLC_bn_new ();
   
-  assert(!debug_hacker(TLS, in_ptr, 260, "(server_DH_inner_data#b5890dba) in dh_prime ="));
+  assert(!debug_hacker(TLS, in_ptr, 260, "DC #%d - (server_DH_inner_data#b5890dba) in dh_prime =", DC->id));
   assert (fetch_bignum (dh_prime) > 0);
-  assert(!debug_hacker(TLS, in_ptr, 260, "(server_DH_inner_data#b5890dba) in g_a ="));
+  assert(!debug_hacker(TLS, in_ptr, 260, "DC #%d - (server_DH_inner_data#b5890dba) in g_a =", DC->id));
   assert (fetch_bignum (g_a) > 0);
 
   if (tglmp_check_DH_params (TLS, dh_prime, g) < 0) {
@@ -605,14 +605,14 @@ static int process_dh_answer (struct tgl_state *TLS, struct connection *c, char 
     return -1;
   }
 
-  assert(!debug_hacker(TLS, in_ptr, 4, "(server_DH_inner_data#b5890dba) in server_time ="));
+  assert(!debug_hacker(TLS, in_ptr, 4, "DC #%d - (server_DH_inner_data#b5890dba) in server_time =", DC->id));
   int server_time = fetch_int ();
   assert (in_ptr <= in_end);
 
   static char sha1_buffer[20];
   TGLC_sha1 ((unsigned char *) decrypt_buffer + 20, (in_ptr - decrypt_buffer - 5) * 4, (unsigned char *) sha1_buffer);
   
-  assert(!debug_hacker(TLS, (int*) sha1_buffer, 20, "(server_DH_inner_data#b5890dba) in _sha1 ="));
+  assert(!debug_hacker(TLS, (int*) sha1_buffer, 20, "DC #%d - (server_DH_inner_data#b5890dba) in _sha1 =", DC->id));
   if (memcmp (decrypt_buffer, sha1_buffer, 20)) {
     vlogprintf (E_ERROR, "bad encrypted message SHA1\n");
     return -1;
@@ -666,19 +666,19 @@ static int process_auth_complete (struct tgl_state *TLS, struct connection *c, c
   }
   in_ptr = in_save;
 
-  assert(!debug_hacker(TLS, in_ptr, 4, "(dh_gen_#) in %%(dh_gen_#) ="));
+  assert(!debug_hacker(TLS, in_ptr, 4, "DC #%d - (dh_gen_#) in %%(dh_gen_#) =", DC->id));
   unsigned op = fetch_int ();
   assert (op == CODE_dh_gen_ok || op == CODE_dh_gen_retry || op == CODE_dh_gen_fail);
 
   int tmp[4];
-  assert(!debug_hacker(TLS, in_ptr, 16, "(dh_gen_#) in nonce ="));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (dh_gen_#) in nonce =", DC->id));
   fetch_ints (tmp, 4);
   if (memcmp (DC->nonce, tmp, 16)) {
     vlogprintf (E_ERROR, "nonce mismatch\n");
     return -1;
   }
   
-  assert(!debug_hacker(TLS, in_ptr, 16, "(dh_gen_#) in server_nonce ="));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (dh_gen_#) in server_nonce =", DC->id));
   fetch_ints (tmp, 4);
   if (memcmp (DC->server_nonce, tmp, 16)) {
     vlogprintf (E_ERROR, "nonce mismatch\n");
@@ -689,7 +689,7 @@ static int process_auth_complete (struct tgl_state *TLS, struct connection *c, c
     return -1;
   }
 
-  assert(!debug_hacker(TLS, in_ptr, 16, "(dh_gen_#) in new_nonce_hash1 ="));
+  assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (dh_gen_#) in new_nonce_hash1 =", DC->id));
   fetch_ints (tmp, 4);
 
   static unsigned char th[44], sha1_buffer[20];
@@ -711,15 +711,15 @@ static int process_auth_complete (struct tgl_state *TLS, struct connection *c, c
   if (!temp_key) {
     bl_do_set_auth_key (TLS, DC->id, (unsigned char *)DC->auth_key);
     TGLC_sha1 ((unsigned char *)DC->auth_key, 256, sha1_buffer);
-    assert(!debug_hacker(TLS, (int*)DC->auth_key, 256, "FINAL _auth_key ="));
+    assert(!debug_hacker(TLS, (int*)DC->auth_key, 256, "DC #%d - FINAL _auth_key =", DC->id));
   } else {
     TGLC_sha1 ((unsigned char *)DC->temp_auth_key, 256, sha1_buffer);
     DC->temp_auth_key_id = le64toh(*(long long *)(sha1_buffer + 12)); //Big Endian
-    assert(!debug_hacker(TLS, (int*)DC->temp_auth_key, 256, "_temp_auth_key ="));
+    assert(!debug_hacker(TLS, (int*)DC->temp_auth_key, 256, "DC #%d - _temp_auth_key =", DC->id));
   }
   
   DC->server_salt = le64toh(*(long long *)DC->server_nonce ^ *(long long *)DC->new_nonce); //Big Endian
-  assert(!debug_hacker(TLS, (int*) &DC->server_salt, 8, "_server_salt ="));
+  assert(!debug_hacker(TLS, (int*) &DC->server_salt, 8, "DC #%d - _server_salt =", DC->id));
 
   DC->state = st_authorized;
 
@@ -1522,8 +1522,8 @@ void tglmp_dc_create_session (struct tgl_state *TLS, struct tgl_dc *DC) {
 
 void tgl_do_send_ping (struct tgl_state *TLS, struct connection *c) {
   int x[3];
-  x[0] = CODE_ping;
-  *(long long *)(x + 1) = rand () * (1ll << 32) + rand ();
+  x[0] = htole32(CODE_ping); //Big Endian
+  *(long long *)(x + 1) = htole64(rand () * (1ll << 32) + rand ()); //TODO review Big Endian write propperly
   tglmp_encrypt_send_message (TLS, c, x, 3, 0);
 }
 
