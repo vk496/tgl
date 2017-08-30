@@ -316,7 +316,7 @@ static void send_req_dh_packet (struct tgl_state *TLS, struct connection *c, TGL
   
   tglt_secure_random (DC->new_nonce, 32);
   out_bytes_literal (DC->new_nonce, 32);
-  assert(!debug_hacker(TLS, packet_ptr - 8, 32, "DC #%d - (p_q_inner_data#83c95aec) out server_nonce=", DC->id));
+  assert(!debug_hacker(TLS, packet_ptr - 8, 32, "DC #%d - (p_q_inner_data#83c95aec) out new_nonce=", DC->id));
   
   if (temp_key) {
     out_int (TLS->temp_key_expire_time);
@@ -717,8 +717,8 @@ static int process_auth_complete (struct tgl_state *TLS, struct connection *c, c
     DC->temp_auth_key_id = le64toh(*(long long *)(sha1_buffer + 12)); //Big Endian
     assert(!debug_hacker(TLS, (int*)DC->temp_auth_key, 256, "DC #%d - _temp_auth_key =", DC->id));
   }
-  
-  DC->server_salt = le64toh(*(long long *)DC->server_nonce ^ *(long long *)DC->new_nonce); //Big Endian
+
+  DC->server_salt = *(long long *)DC->server_nonce ^ *(long long *)DC->new_nonce; //Big Endian. This MUST NOT be convert with leXXtoh
   assert(!debug_hacker(TLS, (int*) &DC->server_salt, 8, "DC #%d - _server_salt =", DC->id));
 
   DC->state = st_authorized;
@@ -811,6 +811,8 @@ static void init_enc_msg (struct tgl_state *TLS, struct tgl_session *S, int usef
   assert (DC->state == st_authorized);
   assert (DC->temp_auth_key_id);
   vlogprintf (E_DEBUG, "temp_auth_key_id = 0x%016" INT64_PRINTF_MODIFIER "x, auth_key_id = 0x%016" INT64_PRINTF_MODIFIER "x\n", DC->temp_auth_key_id, DC->auth_key_id);
+  debug_hacker(TLS, (int*) &DC->auth_key_id, 8, "DC #%d - auth_key_id =", DC->id);
+  debug_hacker(TLS, (int*) &DC->temp_auth_key_id, 8, "DC #%d - temp_auth_key_id =", DC->id);
   enc_msg.auth_key_id = DC->temp_auth_key_id;
   enc_msg.server_salt = DC->server_salt;
   if (!S->session_id) {
@@ -843,6 +845,8 @@ static int aes_encrypt_message (struct tgl_state *TLS, char *key, struct encrypt
   assert (enc->msg_len >= 0 && enc->msg_len <= MAX_MESSAGE_INTS * 4 - 16 && !(enc->msg_len & 3));
   TGLC_sha1 ((unsigned char *) &enc->server_salt, enc_len, sha1_buffer);
   vlogprintf (E_DEBUG, "sending message with sha1 %08x\n", be32toh(*(int *)sha1_buffer)); //Big Endian?
+  debug_hacker(TLS, (int*) sha1_buffer + 1, 16, "msg_key =");
+  debug_hacker(TLS, (int*) &enc->server_salt, enc_len, "unencrypted_msg =");
   memcpy (enc->msg_key, sha1_buffer + 4, 16);
   tgl_init_aes_auth (key, enc->msg_key, 1);
   return tgl_pad_aes_encrypt ((char *) &enc->server_salt, enc_len, (char *) &enc->server_salt, MAX_MESSAGE_INTS * 4 + (MINSZ - UNENCSZ));

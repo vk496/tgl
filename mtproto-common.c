@@ -364,9 +364,9 @@ void tgl_init_aes_unauth (const char server_nonce[16], const char hidden_client_
 void tgl_init_aes_auth (char auth_key[192], char msg_key[16], int encrypt) {
   static unsigned char buffer[48], hash[20];
   //  sha1_a = SHA1 (msg_key + substr (auth_key, 0, 32));
-  //  sha1_b = SHA1 (substr (auth_key, 32, 16) + msg_key + substr (auth_key, 48, 16));
-  //  sha1_с = SHA1 (substr (auth_key, 64, 32) + msg_key);
-  //  sha1_d = SHA1 (msg_key + substr (auth_key, 96, 32));
+  //  sha1_b = SHA1 (substr (auth_key, 32+0, 16) + msg_key + substr (auth_key, 48+0, 16));
+  //  sha1_с = SHA1 (substr (auth_key, 64+0, 32) + msg_key);
+  //  sha1_d = SHA1 (msg_key + substr (auth_key, 96+0, 32));
   //  aes_key = substr (sha1_a, 0, 8) + substr (sha1_b, 8, 12) + substr (sha1_c, 4, 12);
   //  aes_iv = substr (sha1_a, 8, 12) + substr (sha1_b, 0, 8) + substr (sha1_c, 16, 4) + substr (sha1_d, 0, 8);
   memcpy (buffer, msg_key, 16);
