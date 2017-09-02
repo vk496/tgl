@@ -1176,7 +1176,7 @@ static int process_rpc_message (struct tgl_state *TLS, struct connection *c, str
     fail_connection (TLS, c);
     return -1;
   }
-  assert (len >= MINSZ && (len & 15) == (UNENCSZ & 15));
+//  assert (len >= MINSZ && (len & 15) == (UNENCSZ & 15)); //If this confition fails, you will be returned earlier
   struct tgl_dc *DC = TLS->net_methods->get_dc (c);
   if (enc->auth_key_id != DC->temp_auth_key_id && enc->auth_key_id != DC->auth_key_id) {
     vlogprintf (E_WARNING, "received msg from dc %d with auth_key_id %" INT64_PRINTF_MODIFIER "d (perm_auth_key_id %" INT64_PRINTF_MODIFIER "d temp_auth_key_id %" INT64_PRINTF_MODIFIER "d). Dropping\n",
@@ -1195,29 +1195,38 @@ static int process_rpc_message (struct tgl_state *TLS, struct connection *c, str
 
   int l = tgl_pad_aes_decrypt ((char *)&enc->server_salt, len - UNENCSZ, (char *)&enc->server_salt, len - UNENCSZ);
   assert (l == len - UNENCSZ);
-
-  if (!(!(enc->msg_len & 3) && enc->msg_len > 0 && enc->msg_len <= len - MINSZ && len - MINSZ - enc->msg_len <= 12)) {
+  
+  int msg_len = le32toh(enc->msg_len); //Big Endian
+  
+  assert(!debug_hacker(TLS, (int*) &msg_len, 4, "DC #%d - in msg_len =", DC->id));
+  if (!(!(msg_len & 3) && msg_len > 0 && msg_len <= len - MINSZ && len - MINSZ - msg_len <= 12)) {
     vlogprintf (E_WARNING, "Incorrect packet from server. Closing connection\n");
     fail_connection (TLS, c);
     return -1;
   }
-  assert (!(enc->msg_len & 3) && enc->msg_len > 0 && enc->msg_len <= len - MINSZ && len - MINSZ - enc->msg_len <= 12);
+//  assert (!(enc->msg_len & 3) && enc->msg_len > 0 && enc->msg_len <= len - MINSZ && len - MINSZ - enc->msg_len <= 12); //If this confition fails, you will be returned earlier
 
   struct tgl_session *S = TLS->net_methods->get_session (c);
+  assert(!debug_hacker(TLS, (int*) &enc->session_id, 8, "DC #%d - in session_id =", DC->id));
   if (!S || S->session_id != enc->session_id) {
     vlogprintf (E_WARNING, "Message to bad session. Drop.\n");
     return 0;
   }
 
   static unsigned char sha1_buffer[20];
-  TGLC_sha1 ((void *)&enc->server_salt, enc->msg_len + (MINSZ - UNENCSZ), sha1_buffer);
+  TGLC_sha1 ((void *)&enc->server_salt, msg_len + (MINSZ - UNENCSZ), sha1_buffer);
+  assert(!debug_hacker(TLS, (int*) &enc->server_salt, 8, "DC #%d - in server_salt =", DC->id));
+  assert(!debug_hacker(TLS, (int*) sha1_buffer + 4, 16, "DC #%d - in msg_key =", DC->id));
   if (memcmp (&enc->msg_key, sha1_buffer + 4, 16)) {
     vlogprintf (E_WARNING, "Incorrect packet from server. Closing connection\n");
     fail_connection (TLS, c);
     return -1;
   }
-  assert (!memcmp (&enc->msg_key, sha1_buffer + 4, 16));
+//  assert (!memcmp (&enc->msg_key, sha1_buffer + 4, 16)); //If this confition fails, you will be returned earlier
 
+  enc->msg_len = msg_len; //Big Endian
+  enc->seq_no = le32toh(enc->seq_no); //Big Endian
+  
   int this_server_time = enc->msg_id >> 32LL;
   if (!S->received_messages) {
     DC->server_time_delta = this_server_time - get_utime (CLOCK_REALTIME);
