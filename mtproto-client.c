@@ -722,7 +722,7 @@ static int process_auth_complete (struct tgl_state *TLS, struct connection *c, c
   assert(!debug_hacker(TLS, (int*) &DC->server_salt, 8, "DC #%d - _server_salt =", DC->id));
 
   DC->state = st_authorized;
-
+  
   vlogprintf (E_DEBUG, "Auth success\n");
   if (temp_key) {
     bind_temp_auth_key (TLS, c);
@@ -820,7 +820,7 @@ static void init_enc_msg (struct tgl_state *TLS, struct tgl_session *S, int usef
   }
   enc_msg.session_id = S->session_id;
   enc_msg.msg_id = msg_id_override ? msg_id_override : generate_next_msg_id (TLS, DC, S);
-  enc_msg.seq_no = S->seq_no;
+  enc_msg.seq_no = htole32(S->seq_no); //Big Endian.
   if (useful) {
     enc_msg.seq_no |= 1;
   }
@@ -840,9 +840,13 @@ static int aes_encrypt_message (struct tgl_state *TLS, char *key, struct encrypt
   unsigned char sha1_buffer[20];
   const int MINSZ = offsetof (struct encrypted_message, message);
   const int UNENCSZ = offsetof (struct encrypted_message, server_salt);
-
+  
   int enc_len = (MINSZ - UNENCSZ) + enc->msg_len;
   assert (enc->msg_len >= 0 && enc->msg_len <= MAX_MESSAGE_INTS * 4 - 16 && !(enc->msg_len & 3));
+  
+  //Big Endian. struct encrypted_message is used as buffer, so no need to alloc new buffer because msg_len and seq_no only used in this file
+  enc_msg.msg_len = htole32(enc_msg.msg_len); //TODO review if signed int will cause problems
+  
   TGLC_sha1 ((unsigned char *) &enc->server_salt, enc_len, sha1_buffer);
   vlogprintf (E_DEBUG, "sending message with sha1 %08x\n", be32toh(*(int *)sha1_buffer)); //Big Endian?
   debug_hacker(TLS, (int*) sha1_buffer + 1, 16, "msg_key =");
@@ -873,11 +877,11 @@ long long tglmp_encrypt_send_message (struct tgl_state *TLS, struct connection *
     }
   }
   init_enc_msg (TLS, S, flags & 1);
-
+  
   int l = aes_encrypt_message (TLS, DC->temp_auth_key, &enc_msg);
   assert (l > 0);
   rpc_send_message (TLS, c, &enc_msg, l + UNENCSZ);
-
+  
   return S->last_msg_id; // Pray that this was set by generate_next_msg_id somehow
 }
 
@@ -1515,6 +1519,7 @@ static struct mtproto_methods mtproto_methods = {
 void tglmp_dc_create_session (struct tgl_state *TLS, struct tgl_dc *DC) {
   struct tgl_session *S = talloc0 (sizeof (*S));
   assert (TGLC_rand_pseudo_bytes ((unsigned char *) &S->session_id, 8) >= 0);
+  assert(!debug_hacker(TLS, (int*)&S->session_id, 8, "DC #%d - session_id =", DC->id));
   S->dc = DC;
   //S->c = TLS->net_methods->create_connection (TLS, DC->ip, DC->port, S, DC, &mtproto_methods);
 

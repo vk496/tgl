@@ -512,15 +512,12 @@ void tgl_do_insert_header (struct tgl_state *TLS) {
   if (allow_send_linux_version) {
     struct utsname st;
     uname (&st);
-//    out_string (st.machine);
-    out_string ("x86_64"); //TODO remove
+    out_string (st.machine);
     static char buf[4096];
     tsnprintf (buf, sizeof (buf) - 1, "%.999s %.999s %.999s", st.sysname, st.release, st.version);
-//    out_string (buf); 
-    out_string("Linux 4.9.43-1-MANJARO #1 SMP PREEMPT Sun Aug 13 20:28:47 UTC 2017"); //TODO remove
+    out_string (buf); 
     tsnprintf (buf, sizeof (buf) - 1, "%s (TGL %s)", TLS->app_version, TGL_VERSION);
-//    out_string (buf);
-    out_string ("Telegram-cli 1.4.1 (TGL 2.1.0)."); //TODO remove
+    out_string (buf);
     out_string ("En");
   } else {
     out_string ("x86");
