@@ -178,7 +178,7 @@ static int rpc_send_packet (struct tgl_state *TLS, struct connection *c) {
   struct tgl_dc *DC = TLS->net_methods->get_dc (c);
   struct tgl_session *S = TLS->net_methods->get_session (c);
 
-  unenc_msg_header.out_msg_id = htole64(generate_next_msg_id (TLS, DC, S)); //big endian
+  unenc_msg_header.out_msg_id = generate_next_msg_id (TLS, DC, S);
   unenc_msg_header.msg_len = htole32(len); //big endian
 
   int total_len = len + 20;
@@ -803,7 +803,7 @@ static long long generate_next_msg_id (struct tgl_state *TLS, struct tgl_dc *DC,
     TLS->last_msg_id = next_id;
   }
   S->last_msg_id = next_id; // See tglmp_encrypt_send_message
-  return next_id;
+  return htole64(next_id); //Big Endian
 }
 
 static void init_enc_msg (struct tgl_state *TLS, struct tgl_session *S, int useful) {
@@ -819,7 +819,7 @@ static void init_enc_msg (struct tgl_state *TLS, struct tgl_session *S, int usef
     tglt_secure_random (&S->session_id, 8);
   }
   enc_msg.session_id = S->session_id;
-  enc_msg.msg_id = htole64(msg_id_override ? msg_id_override : generate_next_msg_id (TLS, DC, S)); //Big Endian
+  enc_msg.msg_id = msg_id_override ? msg_id_override : generate_next_msg_id (TLS, DC, S);
   enc_msg.seq_no = htole32(S->seq_no); //Big Endian.
   if (useful) {
     enc_msg.seq_no |= 1;
