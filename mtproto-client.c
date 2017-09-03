@@ -819,7 +819,7 @@ static void init_enc_msg (struct tgl_state *TLS, struct tgl_session *S, int usef
     tglt_secure_random (&S->session_id, 8);
   }
   enc_msg.session_id = S->session_id;
-  enc_msg.msg_id = msg_id_override ? msg_id_override : generate_next_msg_id (TLS, DC, S);
+  enc_msg.msg_id = htole64(msg_id_override ? msg_id_override : generate_next_msg_id (TLS, DC, S)); //Big Endian
   enc_msg.seq_no = htole32(S->seq_no); //Big Endian.
   if (useful) {
     enc_msg.seq_no |= 1;
@@ -1226,6 +1226,7 @@ static int process_rpc_message (struct tgl_state *TLS, struct connection *c, str
 
   enc->msg_len = msg_len; //Big Endian
   enc->seq_no = le32toh(enc->seq_no); //Big Endian
+  enc->msg_id = le64toh(enc->msg_id); //Big Endian
   
   int this_server_time = enc->msg_id >> 32LL;
   if (!S->received_messages) {
