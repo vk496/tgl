@@ -820,10 +820,11 @@ static void init_enc_msg (struct tgl_state *TLS, struct tgl_session *S, int usef
   }
   enc_msg.session_id = S->session_id;
   enc_msg.msg_id = msg_id_override ? msg_id_override : generate_next_msg_id (TLS, DC, S);
-  enc_msg.seq_no = htole32(S->seq_no); //Big Endian.
+  enc_msg.seq_no = S->seq_no;
   if (useful) {
     enc_msg.seq_no |= 1;
   }
+  enc_msg.seq_no = htole32(enc_msg.seq_no); //Big Endian.
   S->seq_no += 2;
 };
 
@@ -832,7 +833,7 @@ static void init_enc_msg_inner_temp (struct tgl_dc *DC, long long msg_id) {
   tglt_secure_random (&enc_msg.server_salt, 8);
   tglt_secure_random (&enc_msg.session_id, 8);
   enc_msg.msg_id = msg_id;
-  enc_msg.seq_no = 0;
+  enc_msg.seq_no = 0; //Big Endian
 };
 
 
