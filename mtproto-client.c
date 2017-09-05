@@ -453,7 +453,6 @@ static int process_respq_answer (struct tgl_state *TLS, struct connection *c, ch
 
   static unsigned char tmp[16];
   assert(!debug_hacker(TLS, in_ptr, 16, "DC #%d - (resPQ#05162463) in nonce =", DC->id));
-  vlogprintf (E_ERROR, "nonce mismatch\n");
   fetch_ints (tmp, 4);
   if (memcmp (tmp, DC->nonce, 16)) {
     vlogprintf (E_ERROR, "nonce mismatch\n");
